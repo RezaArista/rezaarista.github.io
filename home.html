@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring dan Kontrol</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #007BFF, #f4f4f9);
+            color: #fff;
+        }
+        header {
+            background: #003d99;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2em;
+            color: #fff;
+        }
+        .container {
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .card {
+            background: #fff;
+            color: #333;
+            border-radius: 15px;
+            width: 300px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: scale(1.05);
+        }
+        .card h2 {
+            margin: 0 0 15px;
+        }
+        .status {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+        .status span {
+            font-weight: bold;
+        }
+        .level {
+            font-size: 2.5em;
+            color: #007BFF;
+            margin-top: 10px;
+        }
+        .icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+            color: #007BFF;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+        button {
+            background: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button.off {
+            background: #FF4C4C;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #003d99;
+            color: #fff;
+            position: absolute;
+            width: 100%;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Monitoring dan Kontrol</h1>
+    </header>
+
+    <div class="container">
+        <!-- Status Perangkat -->
+        <div class="card">
+            <div class="icon">⚙️</div>
+            <h2>Status Perangkat</h2>
+            <div class="status">Status: <span id="deviceStatus">OFF</span></div>
+            <div class="controls">
+                <button id="onButton">ON</button>
+                <button id="offButton" class="off">OFF</button>
+            </div>
+        </div>
+
+        <!-- Level Air -->
+        <div class="card">
+            <div class="icon">💧</div>
+            <h2>Level Air</h2>
+            <div class="status">Level: <span class="level" id="waterLevel">50%</span></div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2025 Monitoring dan Kontrol - Made with ❤️
+    </footer>
+
+    <script>
+        // Placeholder untuk simulasi MQTT
+        let deviceStatus = false; // false = OFF, true = ON
+        let waterLevel = 50; // Level air dalam persen
+
+        // Update status perangkat
+        const updateDeviceStatus = (status) => {
+            deviceStatus = status;
+            document.getElementById("deviceStatus").textContent = status ? "ON" : "OFF";
+            document.getElementById("deviceStatus").style.color = status ? "green" : "red";
+
+            // Kirim data ke MQTT (simulasi)
+            console.log(`Device status set to: ${status ? "ON" : "OFF"}`);
+        };
+
+        // Update level air
+        const updateWaterLevel = (level) => {
+            waterLevel = level;
+            document.getElementById("waterLevel").textContent = `${level}%`;
+
+            // Simulasi pengiriman data
+            console.log(`Water level: ${level}%`);
+        };
+
+        // Event listener untuk tombol
+        document.getElementById("onButton").addEventListener("click", () => updateDeviceStatus(true));
+        document.getElementById("offButton").addEventListener("click", () => updateDeviceStatus(false));
+
+        // Simulasi data level air (bisa di-update dari MQTT)
+        setInterval(() => {
+            const randomLevel = Math.floor(Math.random() * 101); // Random level 0-100
+            updateWaterLevel(randomLevel);
+        }, 5000); // Update setiap 5 detik
+    </script>
+</body>
+</html>
