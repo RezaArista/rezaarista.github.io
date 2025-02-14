@@ -67,7 +67,7 @@
         }
         .controls {
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
             margin-top: 15px;
         }
         button {
@@ -75,15 +75,19 @@
             color: #fff;
             border: none;
             border-radius: 20px;
-            padding: 10px 20px;
-            font-size: 1em;
+            padding: 12px 24px;
+            font-size: 1.2em;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.2s;
+        }
+        button.on {
+            background: #28a745;
         }
         button.off {
-            background: #FF4C4C;
+            background: #dc3545;
         }
         button:hover {
+            transform: scale(1.05);
             opacity: 0.9;
         }
         footer {
@@ -107,10 +111,11 @@
         <div class="card">
             <div class="icon">⚙️</div>
             <h2>Status Perangkat</h2>
-            <div class="status">Status: <span id="deviceStatus">OFF</span></div>
+            <div class="status">
+                KONDISI : <span id="deviceStatus" class="off">OFF</span>
+            </div>
             <div class="controls">
-                <button id="onButton">ON</button>
-                <button id="offButton" class="off">OFF</button>
+                <button id="toggleButton" class="off">NYALAKAN</button>
             </div>
         </div>
 
@@ -131,14 +136,22 @@
         let deviceStatus = false; // false = OFF, true = ON
         let waterLevel = 50; // Level air dalam persen
 
-        // Update status perangkat
-        const updateDeviceStatus = (status) => {
-            deviceStatus = status;
-            document.getElementById("deviceStatus").textContent = status ? "ON" : "OFF";
-            document.getElementById("deviceStatus").style.color = status ? "green" : "red";
+        // Fungsi untuk mengubah status perangkat
+        const toggleDeviceStatus = () => {
+            deviceStatus = !deviceStatus;
+            const statusElement = document.getElementById("deviceStatus");
+            const buttonElement = document.getElementById("toggleButton");
 
-            // Kirim data ke MQTT (simulasi)
-            console.log(`Device status set to: ${status ? "ON" : "OFF"}`);
+            // Update status perangkat
+            statusElement.textContent = deviceStatus ? "ON" : "OFF";
+            statusElement.className = deviceStatus ? "on" : "off";
+
+            // Update teks tombol
+            buttonElement.textContent = deviceStatus ? "MATIKAN" : "NYALAKAN";
+            buttonElement.className = deviceStatus ? "on" : "off";
+
+            // Simulasi pengiriman data
+            console.log(`Device status: ${deviceStatus ? "ON" : "OFF"}`);
         };
 
         // Update level air
@@ -151,8 +164,7 @@
         };
 
         // Event listener untuk tombol
-        document.getElementById("onButton").addEventListener("click", () => updateDeviceStatus(true));
-        document.getElementById("offButton").addEventListener("click", () => updateDeviceStatus(false));
+        document.getElementById("toggleButton").addEventListener("click", toggleDeviceStatus);
 
         // Simulasi data level air (bisa di-update dari MQTT)
         setInterval(() => {
