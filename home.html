@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring dan Kontrol</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -132,45 +133,43 @@
     </footer>
 
     <script>
-        // Placeholder untuk simulasi MQTT
-        let deviceStatus = false; // false = OFF, true = ON
-        let waterLevel = 50; // Level air dalam persen
+        const mqttBroker = "wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8883/mqtt";
+        const username = "rezaap1";
+        const password = "Reza123456";
+        const topicStatus = "Sts";
+        // const topicControl = "device/control";
+        // const topicWaterLevel = "device/waterlevel";
 
-        // Fungsi untuk mengubah status perangkat
-        const toggleDeviceStatus = () => {
-            deviceStatus = !deviceStatus;
-            const statusElement = document.getElementById("deviceStatus");
-            const buttonElement = document.getElementById("toggleButton");
+        const client = mqtt.connect(mqttBroker, {
+            username,
+            password,
+        });
 
-            // Update status perangkat
-            statusElement.textContent = deviceStatus ? "ON" : "OFF";
-            statusElement.className = deviceStatus ? "on" : "off";
+        client.on("connect", () => {
+            console.log("Connected to MQTT Broker");
+            client.subscribe([topicStatus, topicWaterLevel]);
+        });
 
-            // Update teks tombol
-            buttonElement.textContent = deviceStatus ? "MATIKAN" : "NYALAKAN";
-            buttonElement.className = deviceStatus ? "on" : "off";
+        client.on("message", (topic, message) => {
+            if (topic === topicStatus) {
+                const statusElement = document.getElementById("deviceStatus");
+                const buttonElement = document.getElementById("toggleButton");
+                let status = message.toString();
+                let isOn = status === "1";
+                statusElement.textContent = isOn ? "ON" : "OFF";
+                statusElement.className = isOn ? "on" : "off";
+                buttonElement.textContent = isOn ? "MATIKAN" : "NYALAKAN";
+                buttonElement.className = isOn ? "on" : "off";
+            }
+            // if (topic === topicWaterLevel) {
+            //     document.getElementById("waterLevel").textContent = `${message.toString()}%`;
+            // }
+        });
 
-            // Simulasi pengiriman data
-            console.log(`Device status: ${deviceStatus ? "ON" : "OFF"}`);
-        };
-
-        // Update level air
-        const updateWaterLevel = (level) => {
-            waterLevel = level;
-            document.getElementById("waterLevel").textContent = `${level}%`;
-
-            // Simulasi pengiriman data
-            console.log(`Water level: ${level}%`);
-        };
-
-        // Event listener untuk tombol
-        document.getElementById("toggleButton").addEventListener("click", toggleDeviceStatus);
-
-        // Simulasi data level air (bisa di-update dari MQTT)
-        setInterval(() => {
-            const randomLevel = Math.floor(Math.random() * 101); // Random level 0-100
-            updateWaterLevel(randomLevel);
-        }, 5000); // Update setiap 5 detik
+        document.getElementById("toggleButton").addEventListener("click", () => {
+            let currentStatus = document.getElementById("deviceStatus").textContent === "ON" ? "0" : "1";
+            client.publish(topicStatus, currentStatus);
+        });
     </script>
 </body>
 </html>
