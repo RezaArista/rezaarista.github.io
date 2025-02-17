@@ -112,6 +112,40 @@
             width: 100%;
             bottom: 0;
         }
+        .connection-status {
+            text-align: center;
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: all 0.5s ease;
+            display: inline-block;
+            margin: 10px auto;
+            width: auto;
+        }
+        
+        .connected {
+            background: #28a745;
+            color: #fff;
+            padding: 10px 20px;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+        }
+        
+        .disconnected {
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 20px;
+            box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+        }
+        
+        .connecting {
+            background: #ffc107;
+            color: #333;
+            padding: 10px 20px;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+        }
+
+
     </style>
 </head>
 <body>
@@ -153,33 +187,36 @@
 
         client.on("connect", () => {
             console.log("Connected to MQTT Broker");
-            document.getElementById("connectionStatus").textContent = "Connected to MQTT";
-            document.getElementById("connectionStatus").className = "connection-status connected";
+            let statusEl = document.getElementById("connectionStatus");
+            statusEl.innerHTML = "✔️ <b>Terhubung ke MQTT</b>";
+            statusEl.className = "connection-status connected";
             client.subscribe(topicStatus);
         });
-
+        
         client.on("message", (topic, message) => {
             if (topic === topicStatus) {
                 const statusElement = document.getElementById("deviceStatus");
                 const buttonElement = document.getElementById("toggleButton");
                 let isOn = message.toString() === "1";
-                statusElement.textContent = isOn ? "ON" : "OFF";
+                statusElement.innerHTML = isOn ? "✅ <b>ON</b>" : "❌ <b>OFF</b>";
                 statusElement.className = isOn ? "on" : "off";
-                buttonElement.textContent = isOn ? "MATIKAN" : "NYALAKAN";
+                buttonElement.innerHTML = isOn ? "⛔ MATIKAN" : "⚡ NYALAKAN";
                 buttonElement.className = isOn ? "on" : "off";
             }
         });
-
+        
         client.on("error", (error) => {
             console.error("MQTT Error:", error);
-            document.getElementById("connectionStatus").textContent = "MQTT Connection Failed";
-            document.getElementById("connectionStatus").className = "connection-status disconnected";
+            let statusEl = document.getElementById("connectionStatus");
+            statusEl.innerHTML = "❌ <b>Koneksi MQTT Gagal</b>";
+            statusEl.className = "connection-status disconnected";
         });
-
+        
         client.on("close", () => {
             console.log("MQTT Disconnected");
-            document.getElementById("connectionStatus").textContent = "Disconnected from MQTT";
-            document.getElementById("connectionStatus").className = "connection-status disconnected";
+            let statusEl = document.getElementById("connectionStatus");
+            statusEl.innerHTML = "❌ <b>Terputus dari MQTT</b>";
+            statusEl.className = "connection-status disconnected";
         });
 
         document.getElementById("toggleButton").addEventListener("click", () => {
