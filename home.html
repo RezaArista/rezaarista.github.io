@@ -176,8 +176,19 @@
         });
 
         document.getElementById("toggleButton").addEventListener("click", () => {
-            let currentStatus = document.getElementById("deviceStatus").textContent === "ON" ? "0" : "1";
-            client.publish(topicStatus, currentStatus);
+        let button = document.getElementById("toggleButton");
+        
+        // Disable the button for 2 seconds
+        button.disabled = true;
+        
+        // Get current status and toggle it
+        let currentStatus = document.getElementById("deviceStatus").textContent === "ON" ? "0" : "1";
+        client.publish(topicStatus, currentStatus);
+        
+        // Re-enable button after 2 seconds
+        setTimeout(() => {
+            button.disabled = false;
+        }, 2000);
         });
     </script>
 </body>
