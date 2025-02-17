@@ -259,16 +259,32 @@
 
         document.getElementById("toggleButton").addEventListener("click", () => {
             let button = document.getElementById("toggleButton");
+            let statusElement = document.getElementById("deviceStatus");
             let countdown = 5; // Waktu delay 5 detik
             
-            // Nonaktifkan tombol
+            // Nonaktifkan tombol sementara
             button.disabled = true;
             
-            // Ambil status saat ini dan ubah ke status yang berlawanan
-            let currentStatus = document.getElementById("deviceStatus").textContent === "ON" ? "0" : "1";
+            // Ambil status perangkat dan tentukan status baru
+            let currentStatus = statusElement.textContent.includes("ON") ? "0" : "1";
+            
+            // Perbarui status UI sesuai dengan status baru
+            if (currentStatus === "1") {
+                statusElement.innerHTML = "✅ <b>ON</b>";
+                statusElement.className = "on";
+                button.innerHTML = "⛔ MATIKAN";
+                button.className = "on";
+            } else {
+                statusElement.innerHTML = "❌ <b>OFF</b>";
+                statusElement.className = "off";
+                button.innerHTML = "⚡ NYALAKAN";
+                button.className = "off";
+            }
+        
+            // Kirim status baru ke MQTT
             client.publish(topicStatus, currentStatus);
             
-            // Perbarui teks tombol dengan hitungan mundur
+            // Hitung mundur pada tombol
             let countdownInterval = setInterval(() => {
                 button.textContent = `Tunggu ${countdown--} detik`;
                 if (countdown < 0) {
@@ -276,7 +292,7 @@
                     button.disabled = false;
                     button.textContent = currentStatus === "1" ? "MATIKAN" : "NYALAKAN";
                 }
-            }, 1000); // Diperbarui setiap 1 detik
+            }, 1000); // Update setiap detik
         });
     </script>
 </body>
