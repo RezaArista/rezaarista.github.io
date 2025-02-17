@@ -91,6 +91,18 @@
             transform: scale(1.05);
             opacity: 0.9;
         }
+        .connection-status {
+            text-align: center;
+            padding: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .connected {
+            color: #28a745;
+        }
+        .disconnected {
+            color: #dc3545;
+        }
         footer {
             text-align: center;
             padding: 10px;
@@ -106,25 +118,17 @@
     <header>
         <h1>Monitoring dan Kontrol</h1>
     </header>
-
+    
+    <div class="connection-status" id="connectionStatus">Connecting to MQTT...</div>
+    
     <div class="container">
-        <!-- Status Perangkat -->
         <div class="card">
             <div class="icon">⚙️</div>
             <h2>Status Perangkat</h2>
-            <div class="status">
-                KONDISI : <span id="deviceStatus" class="off">OFF</span>
-            </div>
+            <div class="status">KONDISI : <span id="deviceStatus" class="off">OFF</span></div>
             <div class="controls">
                 <button id="toggleButton" class="off">NYALAKAN</button>
             </div>
-        </div>
-
-        <!-- Level Air -->
-        <div class="card">
-            <div class="icon">💧</div>
-            <h2>Level Air</h2>
-            <div class="status">Level: <span class="level" id="waterLevel">50%</span></div>
         </div>
     </div>
 
@@ -137,33 +141,38 @@
         const username = "rezaap1";
         const password = "Reza123456";
         const topicStatus = "Sts";
-        // const topicControl = "device/control";
-        // const topicWaterLevel = "device/waterlevel";
 
-        const client = mqtt.connect(mqttBroker, {
-            username,
-            password,
-        });
+        const client = mqtt.connect(mqttBroker, { username, password });
 
         client.on("connect", () => {
             console.log("Connected to MQTT Broker");
-            client.subscribe([topicStatus, topicWaterLevel]);
+            document.getElementById("connectionStatus").textContent = "Connected to MQTT";
+            document.getElementById("connectionStatus").className = "connection-status connected";
+            client.subscribe(topicStatus);
         });
 
         client.on("message", (topic, message) => {
             if (topic === topicStatus) {
                 const statusElement = document.getElementById("deviceStatus");
                 const buttonElement = document.getElementById("toggleButton");
-                let status = message.toString();
-                let isOn = status === "1";
+                let isOn = message.toString() === "1";
                 statusElement.textContent = isOn ? "ON" : "OFF";
                 statusElement.className = isOn ? "on" : "off";
                 buttonElement.textContent = isOn ? "MATIKAN" : "NYALAKAN";
                 buttonElement.className = isOn ? "on" : "off";
             }
-            // if (topic === topicWaterLevel) {
-            //     document.getElementById("waterLevel").textContent = `${message.toString()}%`;
-            // }
+        });
+
+        client.on("error", (error) => {
+            console.error("MQTT Error:", error);
+            document.getElementById("connectionStatus").textContent = "MQTT Connection Failed";
+            document.getElementById("connectionStatus").className = "connection-status disconnected";
+        });
+
+        client.on("close", () => {
+            console.log("MQTT Disconnected");
+            document.getElementById("connectionStatus").textContent = "Disconnected from MQTT";
+            document.getElementById("connectionStatus").className = "connection-status disconnected";
         });
 
         document.getElementById("toggleButton").addEventListener("click", () => {
