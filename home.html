@@ -215,7 +215,7 @@
         &copy; 2025 Monitoring dan Kontrol - Made with ❤️
     </footer>
 
-<script>
+    <script>
         const mqttBroker = "wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt";
         const username = "rezaap2";
         const password = "Reza123456";
@@ -270,7 +270,7 @@
             
             // Perbarui teks tombol dengan hitungan mundur
             let countdownInterval = setInterval(() => {
-                button.textContent = Tunggu ${countdown--} detik;
+                button.textContent = `Tunggu ${countdown--} detik`;
                 if (countdown < 0) {
                     clearInterval(countdownInterval);
                     button.disabled = false;
