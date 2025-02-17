@@ -183,19 +183,25 @@
         });
 
         document.getElementById("toggleButton").addEventListener("click", () => {
-        let button = document.getElementById("toggleButton");
-        
-        // Disable the button for 2 seconds
-        button.disabled = true;
-        
-        // Get current status and toggle it
-        let currentStatus = document.getElementById("deviceStatus").textContent === "ON" ? "0" : "1";
-        client.publish(topicStatus, currentStatus);
-        
-        // Re-enable button after 2 seconds
-        setTimeout(() => {
-            button.disabled = false;
-        }, 2000);
+            let button = document.getElementById("toggleButton");
+            let countdown = 5; // Waktu delay 5 detik
+            
+            // Nonaktifkan tombol
+            button.disabled = true;
+            
+            // Ambil status saat ini dan ubah ke status yang berlawanan
+            let currentStatus = document.getElementById("deviceStatus").textContent === "ON" ? "0" : "1";
+            client.publish(topicStatus, currentStatus);
+            
+            // Perbarui teks tombol dengan hitungan mundur
+            let countdownInterval = setInterval(() => {
+                button.textContent = `Tunggu ${countdown--} detik`;
+                if (countdown < 0) {
+                    clearInterval(countdownInterval);
+                    button.disabled = false;
+                    button.textContent = currentStatus === "1" ? "MATIKAN" : "NYALAKAN";
+                }
+            }, 1000); // Diperbarui setiap 1 detik
         });
     </script>
 </body>
