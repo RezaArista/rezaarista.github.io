@@ -246,7 +246,7 @@
                 let level = parseFloat(message.toString());
                 document.getElementById("waterLevel").innerText = `${level}%`;
                 // Nonaktifkan tombol sementara
-                button.disabled = level === 100.0;
+                document.getElementById("toggleButton").disabled = level === 100.0;
             }
         });
         
