@@ -293,7 +293,7 @@
             
             // Hitung mundur pada tombol
             let countdownInterval = setInterval(() => {
-                button.textContent = Tunggu ${countdown--} detik;
+                button.textContent = `Tunggu ${countdown--} detik`;
                 if (countdown < 0) {
                     clearInterval(countdownInterval);
                     button.disabled = false;
