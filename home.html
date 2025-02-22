@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -87,7 +87,11 @@
         button.off {
             background: #dc3545;
         }
-        button:hover {
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        button:hover:enabled {
             transform: scale(1.05);
             opacity: 0.9;
         }
@@ -112,78 +116,6 @@
             width: 100%;
             bottom: 0;
         }
-        .connection-status {
-            text-align: center;
-            padding: 15px;
-            font-size: 1.2em;
-            font-weight: bold;
-            border-radius: 8px;
-            transition: all 0.5s ease;
-            display: inline-block;
-            margin: 10px auto;
-            width: auto;
-        }
-        
-        .connected {
-            background: #28a745;
-            color: #fff;
-            padding: 10px 20px;
-            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
-        }
-        
-        .disconnected {
-            background: #dc3545;
-            color: #fff;
-            padding: 10px 20px;
-            box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
-        }
-        
-        .connecting {
-            background: #ffc107;
-            color: #333;
-            padding: 10px 20px;
-            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
-        }
-
-        /* Responsive design for mobile */
-        @media (max-width: 600px) {
-            header h1 {
-                font-size: 1.5em;
-            }
-
-            .card {
-                width: 100%;
-                padding: 15px;
-                margin: 10px 0;
-            }
-
-            .level {
-                font-size: 2em;
-            }
-
-            .icon {
-                font-size: 40px;
-            }
-
-            .status {
-                font-size: 1.3em;
-            }
-
-            .controls button {
-                padding: 10px 20px;
-                font-size: 1em;
-            }
-
-            footer {
-                padding: 5px;
-                font-size: 0.9em;
-            }
-
-            .connection-status {
-                font-size: 1em;
-            }
-        }
-
     </style>
 </head>
 <body>
@@ -191,7 +123,7 @@
         <h1>Monitoring dan Kontrol</h1>
     </header>
     
-    <div class="connection-status" id="connectionStatus">Connecting to MQTT...</div>
+    <div class="connection-status" id="connectionStatus">Menghubungkan ke MQTT...</div>
     
     <div class="container">
         <div class="card">
@@ -202,8 +134,6 @@
                 <button id="toggleButton" class="off">NYALAKAN</button>
             </div>
         </div>
-
-         <!-- Level Air -->
         <div class="card">
             <div class="icon">💧</div>
             <h2>Level Air</h2>
@@ -212,7 +142,7 @@
     </div>
 
     <footer>
-        &copy; 2025 Monitoring dan Kontrol - Made with ❤️
+        &copy; 2025 Monitoring dan Kontrol - Dibuat dengan ❤️
     </footer>
 
     <script>
@@ -220,79 +150,32 @@
         const username = "rezaap2";
         const password = "Reza123456";
         const topicStatus = "Sts";
+        const topicLevel = "Lvl";
 
         const client = mqtt.connect(mqttBroker, { username, password });
 
         client.on("connect", () => {
-            console.log("Connected to MQTT Broker");
-            let statusEl = document.getElementById("connectionStatus");
-            statusEl.innerHTML = "✔️ <b>Terhubung ke MQTT</b>";
-            statusEl.className = "connection-status connected";
-            client.subscribe(topicStatus);
+            document.getElementById("connectionStatus").innerHTML = "✔️ <b>Terhubung ke MQTT</b>";
+            client.subscribe([topicStatus, topicLevel]);
         });
-        
+
         client.on("message", (topic, message) => {
             if (topic === topicStatus) {
-                const statusElement = document.getElementById("deviceStatus");
-                const buttonElement = document.getElementById("toggleButton");
                 let isOn = message.toString() === "1";
-                statusElement.innerHTML = isOn ? "✅ <b>ON</b>" : "❌ <b>OFF</b>";
-                statusElement.className = isOn ? "on" : "off";
-                buttonElement.innerHTML = isOn ? "⛔ MATIKAN" : "⚡ NYALAKAN";
-                buttonElement.className = isOn ? "on" : "off";
+                document.getElementById("deviceStatus").innerHTML = isOn ? "✅ <b>ON</b>" : "❌ <b>OFF</b>";
             }
-        });
-        
-        client.on("error", (error) => {
-            console.error("MQTT Error:", error);
-            let statusEl = document.getElementById("connectionStatus");
-            statusEl.innerHTML = "❌ <b>Koneksi MQTT Gagal</b>";
-            statusEl.className = "connection-status disconnected";
-        });
-        
-        client.on("close", () => {
-            console.log("MQTT Disconnected");
-            let statusEl = document.getElementById("connectionStatus");
-            statusEl.innerHTML = "❌ <b>Terputus dari MQTT</b>";
-            statusEl.className = "connection-status disconnected";
+            if (topic === topicLevel) {
+                let level = parseFloat(message.toString());
+                document.getElementById("waterLevel").innerText = `${level}%`;
+                document.getElementById("toggleButton").disabled = level === 100.0;
+            }
         });
 
         document.getElementById("toggleButton").addEventListener("click", () => {
             let button = document.getElementById("toggleButton");
             let statusElement = document.getElementById("deviceStatus");
-            let countdown = 5; // Waktu delay 5 detik
-            
-            // Nonaktifkan tombol sementara
-            button.disabled = true;
-            
-            // Ambil status perangkat dan tentukan status baru
             let currentStatus = statusElement.textContent.includes("ON") ? "0" : "1";
-            
-            // Perbarui status UI sesuai dengan status baru
-            if (currentStatus === "1") {
-                statusElement.innerHTML = "✅ <b>ON</b>";
-                statusElement.className = "on";
-                button.innerHTML = "⛔ MATIKAN";
-                button.className = "on";
-            } else {
-                statusElement.innerHTML = "❌ <b>OFF</b>";
-                statusElement.className = "off";
-                button.innerHTML = "⚡ NYALAKAN";
-                button.className = "off";
-            }
-        
-            // Kirim status baru ke MQTT
             client.publish(topicStatus, currentStatus, true);
-            
-            // Hitung mundur pada tombol
-            let countdownInterval = setInterval(() => {
-                button.textContent = `Tunggu ${countdown--} detik`;
-                if (countdown < 0) {
-                    clearInterval(countdownInterval);
-                    button.disabled = false;
-                    button.textContent = currentStatus === "1" ? "MATIKAN" : "NYALAKAN";
-                }
-            }, 1000); // Update setiap detik
         });
     </script>
 </body>
