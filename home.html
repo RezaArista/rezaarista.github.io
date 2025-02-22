@@ -229,8 +229,7 @@
             let statusEl = document.getElementById("connectionStatus");
             statusEl.innerHTML = "✔️ <b>Terhubung ke MQTT</b>";
             statusEl.className = "connection-status connected";
-            client.subscribe(topicStatus);
-            client.subscribe(topicLevel);
+            client.subscribe([topicStatus, topicLevel]);
         });
         
         client.on("message", (topic, message) => {
@@ -246,7 +245,8 @@
             if (topic === topicLevel) {
                 let level = parseFloat(message.toString());
                 document.getElementById("waterLevel").innerText = `${level}%`;
-                document.getElementById("toggleButton").disabled = level === 100.0;
+                // Nonaktifkan tombol sementara
+                button.disabled = level === 100.0;
             }
         });
         
