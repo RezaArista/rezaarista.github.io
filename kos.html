@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESP32 Sensor Dashboard</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,41 +44,56 @@
 </head>
 <body>
     <div class="container">
-        <h1>ESP32 Sensor Dashboard</h1>
-        <p class="status">Status: <span id="status">Connecting...</span></p>
+        <h1>Dashboard Keadaan KOS</h1>
+        <p class="status">MQTT Status: <span id="status">Connecting...</span></p>
         <p class="data-box">Temperature: <span id="temp" class="temp">--</span> °C</p>
         <p class="data-box">Humidity: <span id="hum" class="hum">--</span> %</p>
     </div>
 
     <script>
-        var gateway = `ws://${window.location.host}/ws`;
-        var websocket;
+        const mqttBroker = "wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt";
+        const mqttUser = "rezaap";
+        const mqttPassword = "Reza123456";
+        const topicTemp = "temp";
+        const topicHum = "hum";
 
-        function initWebSocket() {
-            console.log("Connecting to WebSocket...");
-            websocket = new WebSocket(gateway);
+        const client = mqtt.connect(mqttBroker, {
+            username: mqttUser,
+            password: mqttPassword,
+            protocolVersion: 4,
+            keepalive: 60,
+            reconnectPeriod: 5000,
+        });
 
-            websocket.onopen = function(event) {
-                console.log("Connected to WebSocket");
-                document.getElementById("status").innerText = "Connected";
-            };
+        client.on("connect", () => {
+            document.getElementById("status").innerText = "Connected";
+            console.log("Connected to MQTT Broker");
+            client.subscribe([topicTemp, topicHum]);
+        });
 
-            websocket.onmessage = function(event) {
-                let data = JSON.parse(event.data);
-                document.getElementById("temp").innerText = data.temp;
-                document.getElementById("hum").innerText = data.hum;
-            };
+        client.on("message", (topic, message) => {
+            const data = message.toString();
+            console.log(`Received: ${topic} -> ${data}`);
 
-            websocket.onclose = function(event) {
-                console.log("WebSocket Disconnected");
-                document.getElementById("status").innerText = "Disconnected";
-                setTimeout(initWebSocket, 3000);
-            };
-        }
+            if (topic === topicTemp) {
+                document.getElementById("temp").innerText = data;
+            } else if (topic === topicHum) {
+                document.getElementById("hum").innerText = data;
+            }
+        });
 
-        window.onload = function() {
-            initWebSocket();
-        };
+        client.on("error", (error) => {
+            console.error("MQTT Error:", error);
+            document.getElementById("status").innerText = "Error!";
+        });
+
+        client.on("reconnect", () => {
+            document.getElementById("status").innerText = "Reconnecting...";
+        });
+
+        client.on("offline", () => {
+            document.getElementById("status").innerText = "Offline";
+        });
     </script>
 </body>
 </html>
