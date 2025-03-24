@@ -3,51 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 Sensor Dashboard</title>
+    <title>Dashboard Keadaan KOS</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             text-align: center;
-            background-color: #f4f4f4;
+            background: linear-gradient(to right, #36D1DC, #5B86E5);
             margin: 0;
             padding: 0;
+            color: white;
         }
         .container {
-            max-width: 400px;
+            max-width: 450px;
             margin: 50px auto;
             padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
         }
         h1 {
-            color: #333;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
         }
         .data-box {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            transition: 0.3s ease-in-out;
+        }
+        .data-box:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        .data-box i {
+            font-size: 30px;
+            margin-right: 15px;
         }
         .temp {
-            color: #ff4500;
+            color: #ff5733;
         }
         .hum {
-            color: #007bff;
+            color: #1E90FF;
         }
         .status {
             font-size: 16px;
             margin-top: 10px;
-            color: green;
+            padding: 8px;
+            border-radius: 5px;
+            display: inline-block;
+            font-weight: bold;
+        }
+        .connected {
+            background: #28a745;
+            color: white;
+        }
+        .error {
+            background: #dc3545;
+            color: white;
+        }
+        .reconnecting {
+            background: #ffc107;
+            color: black;
+        }
+        .offline {
+            background: #6c757d;
+            color: white;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Dashboard Keadaan KOS</h1>
-        <p class="status">MQTT Status: <span id="status">Connecting...</span></p>
-        <p class="data-box">Temperature: <span id="temp" class="temp">--</span> °C</p>
-        <p class="data-box">Humidity: <span id="hum" class="hum">--</span> %</p>
+        <p class="status offline" id="status">Connecting...</p>
+        <div class="data-box">
+            <i class="fas fa-thermometer-half temp"></i>
+            <span>Temperature: <span id="temp" class="temp">--</span> °C</span>
+        </div>
+        <div class="data-box">
+            <i class="fas fa-tint hum"></i>
+            <span>Humidity: <span id="hum" class="hum">--</span> %</span>
+        </div>
     </div>
 
     <script>
@@ -65,8 +110,14 @@
             reconnectPeriod: 5000,
         });
 
+        function updateStatus(className, text) {
+            const statusElement = document.getElementById("status");
+            statusElement.className = "status " + className;
+            statusElement.innerText = text;
+        }
+
         client.on("connect", () => {
-            document.getElementById("status").innerText = "Connected";
+            updateStatus("connected", "Connected");
             console.log("Connected to MQTT Broker");
             client.subscribe([topicTemp, topicHum]);
         });
@@ -82,17 +133,16 @@
             }
         });
 
-        client.on("error", (error) => {
-            console.error("MQTT Error:", error);
-            document.getElementById("status").innerText = "Error!";
+        client.on("error", () => {
+            updateStatus("error", "Error!");
         });
 
         client.on("reconnect", () => {
-            document.getElementById("status").innerText = "Reconnecting...";
+            updateStatus("reconnecting", "Reconnecting...");
         });
 
         client.on("offline", () => {
-            document.getElementById("status").innerText = "Offline";
+            updateStatus("offline", "Offline");
         });
     </script>
 </body>
