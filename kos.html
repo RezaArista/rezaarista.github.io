@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Sensor Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .data-box {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .temp {
+            color: #ff4500;
+        }
+        .hum {
+            color: #007bff;
+        }
+        .status {
+            font-size: 16px;
+            margin-top: 10px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ESP32 Sensor Dashboard</h1>
+        <p class="status">Status: <span id="status">Connecting...</span></p>
+        <p class="data-box">Temperature: <span id="temp" class="temp">--</span> °C</p>
+        <p class="data-box">Humidity: <span id="hum" class="hum">--</span> %</p>
+    </div>
+
+    <script>
+        var gateway = `ws://${window.location.host}/ws`;
+        var websocket;
+
+        function initWebSocket() {
+            console.log("Connecting to WebSocket...");
+            websocket = new WebSocket(gateway);
+
+            websocket.onopen = function(event) {
+                console.log("Connected to WebSocket");
+                document.getElementById("status").innerText = "Connected";
+            };
+
+            websocket.onmessage = function(event) {
+                let data = JSON.parse(event.data);
+                document.getElementById("temp").innerText = data.temp;
+                document.getElementById("hum").innerText = data.hum;
+            };
+
+            websocket.onclose = function(event) {
+                console.log("WebSocket Disconnected");
+                document.getElementById("status").innerText = "Disconnected";
+                setTimeout(initWebSocket, 3000);
+            };
+        }
+
+        window.onload = function() {
+            initWebSocket();
+        };
+    </script>
+</body>
+</html>
