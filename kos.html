@@ -145,8 +145,8 @@
 
         let topicTemp = `temp/${macAddress}`;
         let topicHum = `hum/${macAddress}`;
-        let topicTempPwd = "tempwd"; // Topik untuk Purwodadi
-        let topicHumPwd = "humpwd";   // Topik untuk Purwodadi
+        let topicTempPwd = "tempwd/${macAddress}"; // Topik untuk Purwodadi
+        let topicHumPwd = "humpwd/${macAddress}";   // Topik untuk Purwodadi
 
         const client = mqtt.connect(mqttBroker, {
             username: mqttUser,
