@@ -16,7 +16,7 @@
             color: white;
         }
         .container {
-            max-width: 450px;
+            max-width: 600px;
             margin: 50px auto;
             padding: 20px;
             background: rgba(255, 255, 255, 0.15);
@@ -29,15 +29,15 @@
             font-weight: bold;
             margin-bottom: 20px;
         }
-        .data-box {
-            font-size: 20px;
-            font-weight: bold;
-            margin: 20px 0;
+        .data-section {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.2);
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .data-box {
+            width: 48%;
             padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 10px;
             transition: 0.3s ease-in-out;
         }
@@ -45,9 +45,14 @@
             background: rgba(255, 255, 255, 0.3);
             transform: scale(1.05);
         }
+        .location {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
         .data-box i {
             font-size: 30px;
-            margin-right: 15px;
+            margin-right: 10px;
         }
         .temp {
             color: #ff5733;
@@ -85,13 +90,21 @@
     <div class="container">
         <h1>Dashboard Keadaan KOS</h1>
         <p class="status offline" id="status">Connecting...</p>
-        <div class="data-box">
-            <i class="fas fa-thermometer-half temp"></i>
-            <span>Temperature: <span id="temp" class="temp">--</span> °C</span>
-        </div>
-        <div class="data-box">
-            <i class="fas fa-tint hum"></i>
-            <span>Humidity: <span id="hum" class="hum">--</span> %</span>
+
+        <div class="data-section">
+            <!-- Wirosari -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>KOS SAYA</div>
+                <p>Temperature: <span id="temp" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="hum" class="hum">--</span> %</p>
+            </div>
+
+            <!-- Purwodadi -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>Purwodadi</div>
+                <p>Temperature: <span id="temppwd" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="humpwd" class="hum">--</span> %</p>
+            </div>
         </div>
     </div>
 
@@ -101,6 +114,8 @@
         const mqttPassword = "Reza123456";
         const topicTemp = "temp";
         const topicHum = "hum";
+        const topicTempPwd = "temppwd"; // Topik untuk Purwodadi
+        const topicHumPwd = "humpwd";   // Topik untuk Purwodadi
 
         const client = mqtt.connect(mqttBroker, {
             username: mqttUser,
@@ -119,7 +134,7 @@
         client.on("connect", () => {
             updateStatus("connected", "Connected");
             console.log("Connected to MQTT Broker");
-            client.subscribe([topicTemp, topicHum]);
+            client.subscribe([topicTemp, topicHum, topicTempPwd, topicHumPwd]);
         });
 
         client.on("message", (topic, message) => {
@@ -130,6 +145,10 @@
                 document.getElementById("temp").innerText = data;
             } else if (topic === topicHum) {
                 document.getElementById("hum").innerText = data;
+            } else if (topic === topicTempPwd) {
+                document.getElementById("temppwd").innerText = data;
+            } else if (topic === topicHumPwd) {
+                document.getElementById("humpwd").innerText = data;
             }
         });
 
