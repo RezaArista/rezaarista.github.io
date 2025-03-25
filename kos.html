@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,8 +55,8 @@
             margin-right: 10px;
         }
         .temp, .hum {
-            font-size: 28px;  /* Ukuran lebih besar */
-            font-weight: bold; /* Teks lebih tebal */
+            font-size: 28px;
+            font-weight: bold;
         }
         .temp {
             color: #ff5733;
@@ -145,8 +145,8 @@
 
         let topicTemp = `temp/${macAddress}`;
         let topicHum = `hum/${macAddress}`;
-        let topicTempPwd = "tempwd/${macAddress}"; // Topik untuk Purwodadi
-        let topicHumPwd = "humpwd/${macAddress}";   // Topik untuk Purwodadi
+        let topicTempPwd = "tempwd"; // Topik untuk Purwodadi
+        let topicHumPwd = "humpwd";   // Topik untuk Purwodadi
 
         const client = mqtt.connect(mqttBroker, {
             username: mqttUser,
