@@ -25,7 +25,7 @@
             backdrop-filter: blur(10px);
         }
         h1 {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             margin-bottom: 20px;
         }
@@ -53,6 +53,10 @@
         .data-box i {
             font-size: 30px;
             margin-right: 10px;
+        }
+        .temp, .hum {
+            font-size: 28px;  /* Ukuran lebih besar */
+            font-weight: bold; /* Teks lebih tebal */
         }
         .temp {
             color: #ff5733;
@@ -94,14 +98,14 @@
         <div class="data-section">
             <!-- Wirosari -->
             <div class="data-box">
-                <div class="location"><i class="fas fa-map-marker-alt"></i>KOS SAYA</div>
+                <div class="location"><i class="fas fa-map-marker-alt"></i> Wirosari</div>
                 <p>Temperature: <span id="temp" class="temp">--</span> °C</p>
                 <p>Humidity: <span id="hum" class="hum">--</span> %</p>
             </div>
 
             <!-- Purwodadi -->
             <div class="data-box">
-                <div class="location"><i class="fas fa-map-marker-alt"></i>Purwodadi</div>
+                <div class="location"><i class="fas fa-map-marker-alt"></i> Purwodadi</div>
                 <p>Temperature: <span id="temppwd" class="temp">--</span> °C</p>
                 <p>Humidity: <span id="humpwd" class="hum">--</span> %</p>
             </div>
@@ -137,6 +141,8 @@
             client.subscribe([topicTemp, topicHum, topicTempPwd, topicHumPwd]);
         });
 
+        let temppwdReceived = false; // Flag untuk memeriksa apakah `temppwd` diterima
+
         client.on("message", (topic, message) => {
             const data = message.toString();
             console.log(`Received: ${topic} -> ${data}`);
@@ -147,10 +153,19 @@
                 document.getElementById("hum").innerText = data;
             } else if (topic === topicTempPwd) {
                 document.getElementById("temppwd").innerText = data;
+                temppwdReceived = true; // Set flag menjadi true jika `temppwd` diterima
             } else if (topic === topicHumPwd) {
                 document.getElementById("humpwd").innerText = data;
             }
         });
+
+        // Jika `temppwd` belum pernah diterima dalam 10 detik, tampilkan "--"
+        setInterval(() => {
+            if (!temppwdReceived) {
+                document.getElementById("temppwd").innerText = "--";
+            }
+            temppwdReceived = false; // Reset flag setiap 10 detik
+        }, 10000);
 
         client.on("error", () => {
             updateStatus("error", "Error!");
