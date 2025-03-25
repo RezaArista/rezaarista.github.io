@@ -145,8 +145,8 @@
 
         let topicTemp = `temp/${macAddress}`;
         let topicHum = `hum/${macAddress}`;
-        let topicTempPwd = "tempwd"; // Topik untuk Purwodadi
-        let topicHumPwd = "humpwd";   // Topik untuk Purwodadi
+        let topicTempPwd = `tempwd/${macAddress}`;
+        let topicHumPwd = `humpwd/${macAddress}`;
 
         const client = mqtt.connect(mqttBroker, {
             username: mqttUser,
@@ -160,8 +160,10 @@
             macAddress = document.getElementById("macAddress").value;
             topicTemp = `temp/${macAddress}`;
             topicHum = `hum/${macAddress}`;
+            topicTempPwd = `tempwd/${macAddress}`;
+            topicHumPwd = `humpwd/${macAddress}`;
 
-            console.log(`Updated Topics: ${topicTemp}, ${topicHum}`);
+            console.log(`Updated Topics: ${topicTemp}, ${topicHum}, ${topicTempPwd}, ${topicHumPwd}`);
 
             client.subscribe([topicTemp, topicHum, topicTempPwd, topicHumPwd]);
         }
