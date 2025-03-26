@@ -178,6 +178,27 @@
                 <p>Humidity: <span id="humpwd2" class="hum">--</span> %</p>
             </div>
         </div>
+
+        <div class="config">
+            <label>MAC Address: </label>
+            <input type="text" id="macAddress3" value="24:DC:C3:9C:26:B8">
+            <button onclick="updateTopics1()">Set MAC</button>
+        </div>
+        <div class="data-section">
+            <!-- Wirosari -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>RUMAH REZA</div>
+                <p>Temperature: <span id="temp3" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="hum3" class="hum">--</span> %</p>
+            </div>
+
+            <!-- Purwodadi -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>Purwodadi</div>
+                <p>Temperature: <span id="temppwd3" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="humpwd3" class="hum">--</span> %</p>
+            </div>
+        </div>
     </div>
 
 <script>
@@ -201,7 +222,11 @@
         temp2: `temp/${macAddress2}`,
         hum2: `hum/${macAddress2}`,
         tempPwd2: `tempwd/${macAddress2}`,
-        humPwd2: `humpwd/${macAddress2}`
+        humPwd2: `humpwd/${macAddress2}`,
+        temp3: `temp/${macAddress3}`,
+        hum3: `hum/${macAddress3}`,
+        tempPwd3: `tempwd/${macAddress3}`,
+        humPwd3: `humpwd/${macAddress3}`
     };
 
     const client = mqtt.connect(mqttBroker, {
@@ -244,6 +269,17 @@
         client.subscribe([topics.temp2, topics.hum2, topics.tempPwd2, topics.humPwd2]);
     }
 
+    function updateTopics3() {
+        macAddress3 = document.getElementById("macAddress3").value;
+        topics.temp3 = `temp/${macAddress3}`;
+        topics.hum3 = `hum/${macAddress3}`;
+        topics.tempPwd3 = `tempwd/${macAddress3}`;
+        topics.humPwd3 = `humpwd/${macAddress3}`;
+        
+        console.log("Updated Topics 4:", topics);
+        client.subscribe([topics.temp3, topics.hum3, topics.tempPwd3, topics.humPwd3]);
+    }
+
     function updateStatus(className, text) {
         const statusElement = document.getElementById("status");
         statusElement.className = "status " + className;
@@ -272,7 +308,11 @@
             case topics.temp2: document.getElementById("temp2").innerText = data; break;
             case topics.hum2: document.getElementById("hum2").innerText = data; break;
             case topics.tempPwd2: document.getElementById("temppwd2").innerText = data; break;
-            case topics.humPwd2: document.getElementById("humpwd2").innerText = data; break;               
+            case topics.humPwd2: document.getElementById("humpwd2").innerText = data; break;     
+            case topics.temp3: document.getElementById("temp3").innerText = data; break;
+            case topics.hum3: document.getElementById("hum3").innerText = data; break;
+            case topics.tempPw3: document.getElementById("temppwd3").innerText = data; break;
+            case topics.humPwd3: document.getElementById("humpwd3").innerText = data; break;   
         }
     });
 
