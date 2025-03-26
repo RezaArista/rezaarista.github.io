@@ -170,11 +170,11 @@
         let topicTempPwd = `tempwd/${macAddress}`;
         let topicHumPwd = `humpwd/${macAddress}`;
 
-        let macAddress1 = document.getElementById("macAddress").value;
-        let topicTemp1 = `temp/${macAddress}`;
-        let topicHum1 = `hum/${macAddress}`;
-        let topicTempPwd1 = `tempwd/${macAddress}`;
-        let topicHumPwd1 = `humpwd/${macAddress}`;
+        let macAddress1 = document.getElementById("macAddress1").value;
+        let topicTemp1 = `temp/${macAddress1}`;
+        let topicHum1 = `hum/${macAddress1}`;
+        let topicTempPwd1 = `tempwd/${macAddress1}`;
+        let topicHumPwd1 = `humpwd/${macAddress1}`;
 
         const client = mqtt.connect(mqttBroker, {
             username: mqttUser,
