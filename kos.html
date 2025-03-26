@@ -135,6 +135,28 @@
                 <p>Humidity: <span id="humpwd" class="hum">--</span> %</p>
             </div>
         </div>
+
+        <div class="config">
+            <label>MAC Address: </label>
+            <input type="text" id="macAddress" value="24:DC:C3:9C:13:9C">
+            <button onclick="updateTopics1()">Set MAC</button>
+        </div>
+
+        <div class="data-section">
+            <!-- Wirosari -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>JAM RUANGAN</div>
+                <p>Temperature: <span id="temp1" class="temp1">--</span> °C</p>
+                <p>Humidity: <span id="hum1" class="hum1">--</span> %</p>
+            </div>
+
+            <!-- Purwodadi -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>Purwodadi</div>
+                <p>Temperature: <span id="temppwd1" class="temp1">--</span> °C</p>
+                <p>Humidity: <span id="humpwd1" class="hum1">--</span> %</p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -167,6 +189,18 @@
 
             client.subscribe([topicTemp, topicHum, topicTempPwd, topicHumPwd]);
         }
+        
+        function updateTopics1() {
+            macAddress = document.getElementById("macAddress").value;
+            topicTemp1 = `temp/${macAddress}`;
+            topicHum1 = `hum/${macAddress}`;
+            topicTempPwd1 = `tempwd/${macAddress}`;
+            topicHumPwd1 = `humpwd/${macAddress}`;
+
+            console.log(`Updated Topics: ${topicTemp1}, ${topicHum1}, ${topicTempPwd1}, ${topicHumPwd1}`);
+
+            client.subscribe([topicTemp, topicHum, topicTempPwd, topicHumPwd]);
+        }
 
         function updateStatus(className, text) {
             const statusElement = document.getElementById("status");
@@ -177,7 +211,7 @@
         client.on("connect", () => {
             updateStatus("connected", "Connected");
             console.log("Connected to MQTT Broker");
-            client.subscribe([topicTemp, topicHum, topicTempPwd, topicHumPwd]);
+            client.subscribe([topicTemp, topicHum, topicTempPwd, topicHumPwd,topicTemp1, topicHum1, topicTempPwd1, topicHumPwd1]);
         });
 
         client.on("message", (topic, message) => {
@@ -192,6 +226,14 @@
                 document.getElementById("temppwd").innerText = data;
             } else if (topic === topicHumPwd) {
                 document.getElementById("humpwd").innerText = data;
+            } else if (topic === topicTemp1) {
+                document.getElementById("temp1").innerText = data;
+            } else if (topic === topicHum1) {
+                document.getElementById("hum1").innerText = data;
+            } else if (topic === topicTempPwd1) {
+                document.getElementById("temppwd1").innerText = data;
+            } else if (topic === topicHumPwd) {
+                document.getElementById("humpwd1").innerText = data;
             }
         });
 
