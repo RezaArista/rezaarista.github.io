@@ -159,101 +159,87 @@
         </div>
     </div>
 
-    <script>
-        const mqttBroker = "wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt";
-        const mqttUser = "rezaap";
-        const mqttPassword = "Reza123456";
-        let macAddress = document.getElementById("macAddress").value;
+<script>
+    const mqttBroker = "wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt";
+    const mqttUser = "rezaap";
+    const mqttPassword = "Reza123456";
 
-        let topicTemp = `temp/${macAddress}`;
-        let topicHum = `hum/${macAddress}`;
-        let topicTempPwd = `tempwd/${macAddress}`;
-        let topicHumPwd = `humpwd/${macAddress}`;
+    let macAddress = document.getElementById("macAddress").value;
+    let macAddress1 = document.getElementById("macAddress1").value;
 
-        let macAddress1 = document.getElementById("macAddress1").value;
-        let topicTemp1 = `temp/${macAddress1}`;
-        let topicHum1 = `hum/${macAddress1}`;
-        let topicTempPwd1 = `tempwd/${macAddress1}`;
-        let topicHumPwd1 = `humpwd/${macAddress1}`;
+    let topics = {
+        temp: `temp/${macAddress}`,
+        hum: `hum/${macAddress}`,
+        tempPwd: `tempwd/${macAddress}`,
+        humPwd: `humpwd/${macAddress}`,
+        temp1: `temp/${macAddress1}`,
+        hum1: `hum/${macAddress1}`,
+        tempPwd1: `tempwd/${macAddress1}`,
+        humPwd1: `humpwd/${macAddress1}`
+    };
 
-        const client = mqtt.connect(mqttBroker, {
-            username: mqttUser,
-            password: mqttPassword,
-            protocolVersion: 4,
-            keepalive: 60,
-            reconnectPeriod: 5000,
-        });
+    const client = mqtt.connect(mqttBroker, {
+        username: mqttUser,
+        password: mqttPassword,
+        protocolVersion: 4,
+        keepalive: 60,
+        reconnectPeriod: 5000,
+    });
 
-        function updateTopics() {
-            macAddress = document.getElementById("macAddress").value;
-            topicTemp = `temp/${macAddress}`;
-            topicHum = `hum/${macAddress}`;
-            topicTempPwd = `tempwd/${macAddress}`;
-            topicHumPwd = `humpwd/${macAddress}`;
-
-            console.log(`Updated Topics: ${topicTemp}, ${topicHum}, ${topicTempPwd}, ${topicHumPwd}`);
-
-            client.subscribe([topicTemp, topicHum, topicTempPwd, topicHumPwd]);
-        }
+    function updateTopics() {
+        macAddress = document.getElementById("macAddress").value;
+        topics.temp = `temp/${macAddress}`;
+        topics.hum = `hum/${macAddress}`;
+        topics.tempPwd = `tempwd/${macAddress}`;
+        topics.humPwd = `humpwd/${macAddress}`;
         
-        function updateTopics1() {
-            macAddress = document.getElementById("macAddress").value;
-            topicTemp1 = `temp/${macAddress}`;
-            topicHum1 = `hum/${macAddress}`;
-            topicTempPwd1 = `tempwd/${macAddress}`;
-            topicHumPwd1 = `humpwd/${macAddress}`;
+        console.log("Updated Topics:", topics);
+        client.subscribe([topics.temp, topics.hum, topics.tempPwd, topics.humPwd]);
+    }
 
-            console.log(`Updated Topics: ${topicTemp1}, ${topicHum1}, ${topicTempPwd1}, ${topicHumPwd1}`);
+    function updateTopics1() {
+        macAddress1 = document.getElementById("macAddress1").value;
+        topics.temp1 = `temp/${macAddress1}`;
+        topics.hum1 = `hum/${macAddress1}`;
+        topics.tempPwd1 = `tempwd/${macAddress1}`;
+        topics.humPwd1 = `humpwd/${macAddress1}`;
+        
+        console.log("Updated Topics 1:", topics);
+        client.subscribe([topics.temp1, topics.hum1, topics.tempPwd1, topics.humPwd1]);
+    }
 
-            client.subscribe([topicTemp, topicHum, topicTempPwd, topicHumPwd]);
+    function updateStatus(className, text) {
+        const statusElement = document.getElementById("status");
+        statusElement.className = "status " + className;
+        statusElement.innerText = text;
+    }
+
+    client.on("connect", () => {
+        updateStatus("connected", "Connected");
+        console.log("Connected to MQTT Broker");
+        client.subscribe(Object.values(topics));
+    });
+
+    client.on("message", (topic, message) => {
+        const data = message.toString();
+        console.log(`Received: ${topic} -> ${data}`);
+
+        switch (topic) {
+            case topics.temp: document.getElementById("temp").innerText = data; break;
+            case topics.hum: document.getElementById("hum").innerText = data; break;
+            case topics.tempPwd: document.getElementById("temppwd").innerText = data; break;
+            case topics.humPwd: document.getElementById("humpwd").innerText = data; break;
+            case topics.temp1: document.getElementById("temp1").innerText = data; break;
+            case topics.hum1: document.getElementById("hum1").innerText = data; break;
+            case topics.tempPwd1: document.getElementById("temppwd1").innerText = data; break;
+            case topics.humPwd1: document.getElementById("humpwd1").innerText = data; break;
         }
+    });
 
-        function updateStatus(className, text) {
-            const statusElement = document.getElementById("status");
-            statusElement.className = "status " + className;
-            statusElement.innerText = text;
-        }
+    client.on("error", () => updateStatus("error", "Error!"));
+    client.on("reconnect", () => updateStatus("reconnecting", "Reconnecting..."));
+    client.on("offline", () => updateStatus("offline", "Offline"));
+</script>
 
-        client.on("connect", () => {
-            updateStatus("connected", "Connected");
-            console.log("Connected to MQTT Broker");
-            client.subscribe([topicTemp, topicHum, topicTempPwd, topicHumPwd,topicTemp1, topicHum1, topicTempPwd1, topicHumPwd1]);
-        });
-
-        client.on("message", (topic, message) => {
-            const data = message.toString();
-            console.log(`Received: ${topic} -> ${data}`);
-
-            if (topic === topicTemp) {
-                document.getElementById("temp").innerText = data;
-            } else if (topic === topicHum) {
-                document.getElementById("hum").innerText = data;
-            } else if (topic === topicTempPwd) {
-                document.getElementById("temppwd").innerText = data;
-            } else if (topic === topicHumPwd) {
-                document.getElementById("humpwd").innerText = data;
-            } else if (topic === topicTemp1) {
-                document.getElementById("temp1").innerText = data;
-            } else if (topic === topicHum1) {
-                document.getElementById("hum1").innerText = data;
-            } else if (topic === topicTempPwd1) {
-                document.getElementById("temppwd1").innerText = data;
-            } else if (topic === topicHumPwd1) {
-                document.getElementById("humpwd1").innerText = data;
-            }
-        });
-
-        client.on("error", () => {
-            updateStatus("error", "Error!");
-        });
-
-        client.on("reconnect", () => {
-            updateStatus("reconnecting", "Reconnecting...");
-        });
-
-        client.on("offline", () => {
-            updateStatus("offline", "Offline");
-        });
-    </script>
 </body>
 </html>
