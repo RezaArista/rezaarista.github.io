@@ -138,7 +138,7 @@
 
         <div class="config">
             <label>MAC Address: </label>
-            <input type="text" id="macAddress" value="24:DC:C3:9C:13:9C">
+            <input type="text" id="macAddress1" value="24:DC:C3:9C:13:9C">
             <button onclick="updateTopics1()">Set MAC</button>
         </div>
 
@@ -169,6 +169,12 @@
         let topicHum = `hum/${macAddress}`;
         let topicTempPwd = `tempwd/${macAddress}`;
         let topicHumPwd = `humpwd/${macAddress}`;
+
+        let macAddress1 = document.getElementById("macAddress").value;
+        let topicTemp1 = `temp/${macAddress}`;
+        let topicHum1 = `hum/${macAddress}`;
+        let topicTempPwd1 = `tempwd/${macAddress}`;
+        let topicHumPwd1 = `humpwd/${macAddress}`;
 
         const client = mqtt.connect(mqttBroker, {
             username: mqttUser,
@@ -232,7 +238,7 @@
                 document.getElementById("hum1").innerText = data;
             } else if (topic === topicTempPwd1) {
                 document.getElementById("temppwd1").innerText = data;
-            } else if (topic === topicHumPwd) {
+            } else if (topic === topicHumPwd1) {
                 document.getElementById("humpwd1").innerText = data;
             }
         });
