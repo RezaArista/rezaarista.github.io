@@ -111,7 +111,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Dashboard Keadaan KOS</h1>
+        <h1>Dashboard TEMP & HUM</h1>
         <p class="status offline" id="status">Connecting...</p>
 
         <div class="config">
@@ -123,7 +123,7 @@
         <div class="data-section">
             <!-- Wirosari -->
             <div class="data-box">
-                <div class="location"><i class="fas fa-map-marker-alt"></i>KOS SAYA</div>
+                <div class="location"><i class="fas fa-map-marker-alt"></i>KOS REZA</div>
                 <p>Temperature: <span id="temp" class="temp">--</span> °C</p>
                 <p>Humidity: <span id="hum" class="hum">--</span> %</p>
             </div>
@@ -145,7 +145,7 @@
         <div class="data-section">
             <!-- Wirosari -->
             <div class="data-box">
-                <div class="location"><i class="fas fa-map-marker-alt"></i>JAM RUANGAN</div>
+                <div class="location"><i class="fas fa-map-marker-alt"></i>JAM OFFICE</div>
                 <p>Temperature: <span id="temp1" class="temp">--</span> °C</p>
                 <p>Humidity: <span id="hum1" class="hum">--</span> %</p>
             </div>
@@ -157,6 +157,27 @@
                 <p>Humidity: <span id="humpwd1" class="hum">--</span> %</p>
             </div>
         </div>
+        <div class="config">
+            <label>MAC Address: </label>
+            <input type="text" id="macAddress2" value="24:DC:C3:9C:12:A4">
+            <button onclick="updateTopics1()">Set MAC</button>
+        </div>
+
+        <div class="data-section">
+            <!-- Wirosari -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>RUMAH YUSUF</div>
+                <p>Temperature: <span id="temp2" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="hum2" class="hum">--</span> %</p>
+            </div>
+
+            <!-- Purwodadi -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>Purwodadi</div>
+                <p>Temperature: <span id="temppwd2" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="humpwd2" class="hum">--</span> %</p>
+            </div>
+        </div>
     </div>
 
 <script>
@@ -166,6 +187,7 @@
 
     let macAddress = document.getElementById("macAddress").value;
     let macAddress1 = document.getElementById("macAddress1").value;
+    let macAddress2 = document.getElementById("macAddress2").value;
 
     let topics = {
         temp: `temp/${macAddress}`,
@@ -176,6 +198,10 @@
         hum1: `hum/${macAddress1}`,
         tempPwd1: `tempwd/${macAddress1}`,
         humPwd1: `humpwd/${macAddress1}`
+        temp2: `temp/${macAddress2}`,
+        hum2: `hum/${macAddress2}`,
+        tempPwd2: `tempwd/${macAddress2}`,
+        humPwd2: `humpwd/${macAddress2}`
     };
 
     const client = mqtt.connect(mqttBroker, {
@@ -193,7 +219,7 @@
         topics.tempPwd = `tempwd/${macAddress}`;
         topics.humPwd = `humpwd/${macAddress}`;
         
-        console.log("Updated Topics:", topics);
+        console.log("Updated Topics1:", topics);
         client.subscribe([topics.temp, topics.hum, topics.tempPwd, topics.humPwd]);
     }
 
@@ -204,8 +230,18 @@
         topics.tempPwd1 = `tempwd/${macAddress1}`;
         topics.humPwd1 = `humpwd/${macAddress1}`;
         
-        console.log("Updated Topics 1:", topics);
+        console.log("Updated Topics 2:", topics);
         client.subscribe([topics.temp1, topics.hum1, topics.tempPwd1, topics.humPwd1]);
+    }
+    function updateTopics2() {
+        macAddress2 = document.getElementById("macAddress2").value;
+        topics.temp2 = `temp/${macAddress2}`;
+        topics.hum2 = `hum/${macAddress2}`;
+        topics.tempPwd2 = `tempwd/${macAddress2}`;
+        topics.humPwd2 = `humpwd/${macAddress2}`;
+        
+        console.log("Updated Topics 3:", topics);
+        client.subscribe([topics.temp2, topics.hum2, topics.tempPwd2, topics.humPwd2]);
     }
 
     function updateStatus(className, text) {
@@ -233,6 +269,10 @@
             case topics.hum1: document.getElementById("hum1").innerText = data; break;
             case topics.tempPwd1: document.getElementById("temppwd1").innerText = data; break;
             case topics.humPwd1: document.getElementById("humpwd1").innerText = data; break;
+            case topics.temp2: document.getElementById("temp2").innerText = data; break;
+            case topics.hum2: document.getElementById("hum2").innerText = data; break;
+            case topics.tempPwd2: document.getElementById("temppwd2").innerText = data; break;
+            case topics.humPwd2: document.getElementById("humpwd2").innerText = data; break;               
         }
     });
 
