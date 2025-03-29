@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Keadaan KOS</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/   
-        <style>
-        /* Styling Umum */
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
@@ -27,12 +27,6 @@
             backdrop-filter: blur(10px);
         }
 
-        h1 {
-            font-size: 26px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
         .status {
             font-size: 16px;
             font-weight: bold;
@@ -47,7 +41,6 @@
         .reconnecting { background: #ffc107; color: black; }
         .offline { background: #6c757d; color: white; }
 
-        /* Bagian Data */
         .data-section {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -75,11 +68,6 @@
             margin-bottom: 8px;
         }
 
-        .data-box i {
-            font-size: 30px;
-            margin-bottom: 5px;
-        }
-
         .temp, .hum {
             font-size: 26px;
             font-weight: bold;
@@ -88,17 +76,11 @@
         .temp { color: #ff5733; }
         .hum { color: #1E90FF; }
 
-        /* Bagian Konfigurasi */
         .config {
             margin-top: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-
-        .config label {
-            font-size: 16px;
-            font-weight: bold;
         }
 
         .config input {
@@ -126,12 +108,6 @@
 
         .config button:hover {
             background-color: #218838;
-        }
-
-        @media (max-width: 600px) {
-            .data-section {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
