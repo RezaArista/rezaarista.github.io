@@ -244,23 +244,33 @@ function startScanner() {
 }
 
 function sendDataToSheet(data) {
-  fetch(sheetURL, {
+  console.log('Data yang dikirim:', data);
+
+  const formData = new FormData();
+  formData.append('barcode', data.barcode);
+  formData.append('line', data.line);
+  formData.append('fac', data.fac);
+  formData.append('barcode2', data.barcode2);
+  formData.append('iot', data.iot);
+
+  fetch('https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec', {
     method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  }).then(response => {
-    console.log('Success', response);
-    document.getElementById("successMessage").innerText = "✅ Data sent successfully!";
+    body: formData, 
+  })
+  .then(response => response.text())
+  .then(result => {
+    console.log('Success:', result);
+    document.getElementById("successMessage").innerText = "✅ Data terkirim!";
     document.getElementById("dataForm").reset();
-    document.getElementById("popupMessage").style.display = "block"; // Show popup
+    document.getElementById("popupMessage").style.display = "block";
     setTimeout(() => {
-      document.getElementById("popupMessage").style.display = "none"; // Hide popup after 3 seconds
-      startScanner(); // Restart camera after success
+      document.getElementById("popupMessage").style.display = "none";
+      startScanner();
     }, 3000);
-  }).catch(error => {
+  })
+  .catch(error => {
     console.error('Error!', error.message);
-    document.getElementById("errorMessage").innerText = "❌ Failed to send data!";
+    document.getElementById("errorMessage").innerText = "❌ Gagal mengirim data!";
   });
 }
   
