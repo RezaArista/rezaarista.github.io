@@ -24,6 +24,20 @@
       border-radius: 8px;
       background: white;
     }
+    #switchCamera {
+      width: 100%;
+      background-color: #008CBA;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    #switchCamera:hover {
+      background-color: #007B9E;
+    }
     form {
       background: #fff;
       padding: 15px;
@@ -40,7 +54,7 @@
       border: 1px solid #ccc;
       font-size: 16px;
     }
-    button {
+    button[type="submit"] {
       width: 100%;
       background-color: #4CAF50;
       color: white;
@@ -50,7 +64,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    button:hover {
+    button[type="submit"]:hover {
       background-color: #45a049;
     }
     .success {
@@ -66,6 +80,8 @@
 <h1>Scan Barcode</h1>
 
 <div id="reader"></div>
+
+<button id="switchCamera">🔄 Switch Camera</button>
 
 <form id="dataForm">
   <label>MCID (Barcode hasil scan):</label>
@@ -83,67 +99,78 @@
 <div class="success" id="successMessage"></div>
 
 <script>
-const sheetURL = "https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec"; // <-- Ganti dengan URL WebApp Anda
+const sheetURL = "https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec"; // Ganti URL WebApp Anda
 
-// Kirim data ke Google Sheets
-function sendDataToSheet(data) {
-    fetch(sheetURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    }).then(response => {
-        console.log('Success', response);
-        document.getElementById("successMessage").innerText = "✅ Data sent successfully!";
-        document.getElementById("dataForm").reset();
-    }).catch(error => {
-        console.error('Error!', error.message);
-        document.getElementById("successMessage").innerText = "❌ Failed to send data!";
-    });
-}
-
-// Setelah scan sukses
-function onScanSuccess(decodedText, decodedResult) {
-    console.log(`Code scanned = ${decodedText}`);
-    document.getElementById('barcode').value = decodedText;
-}
-
-// Setup Scanner
 let html5QrCode = new Html5Qrcode("reader");
+let currentFacingMode = "environment"; // default kamera belakang
+
 const qrConfig = { 
-    fps: 5, 
-    qrbox: { width: 250, height: 250 },
-    aspectRatio: 1.0
+  fps: 5, 
+  qrbox: { width: 250, height: 250 },
+  aspectRatio: 1.0
 };
 
-// Minta kamera belakang
-Html5Qrcode.getCameras().then(cameras => {
-    if (cameras && cameras.length) {
-        let backCamera = cameras.find(cam => cam.label.toLowerCase().includes('back')) || cameras[0];
-        html5QrCode.start(
-            { deviceId: { exact: backCamera.id } },
-            qrConfig,
-            onScanSuccess
-        );
-    }
-}).catch(err => {
-    console.error(err);
+// Fungsi untuk mulai kamera
+function startScanner() {
+  html5QrCode.start(
+    { facingMode: currentFacingMode },
+    qrConfig,
+    onScanSuccess
+  ).catch(err => {
+    console.error("Camera start error", err);
+  });
+}
+
+// Fungsi kirim data
+function sendDataToSheet(data) {
+  fetch(sheetURL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(response => {
+    console.log('Success', response);
+    document.getElementById("successMessage").innerText = "✅ Data sent successfully!";
+    document.getElementById("dataForm").reset();
+  }).catch(error => {
+    console.error('Error!', error.message);
+    document.getElementById("successMessage").innerText = "❌ Failed to send data!";
+  });
+}
+
+// Fungsi saat berhasil scan
+function onScanSuccess(decodedText, decodedResult) {
+  console.log(`Code scanned = ${decodedText}`);
+  document.getElementById('barcode').value = decodedText;
+}
+
+// Start kamera awal
+startScanner();
+
+// Event submit form
+document.getElementById('dataForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const barcode = document.getElementById('barcode').value;
+  const line = document.getElementById('line').value;
+  const fac = document.getElementById('fac').value;
+
+  if(barcode && line && fac){
+    sendDataToSheet({ barcode, line, fac });
+  } else {
+    alert("Please scan and fill all fields!");
+  }
 });
 
-// Submit form
-document.getElementById('dataForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    const barcode = document.getElementById('barcode').value;
-    const line = document.getElementById('line').value;
-    const fac = document.getElementById('fac').value;
-
-    if(barcode && line && fac){
-        sendDataToSheet({ barcode, line, fac });
-    } else {
-        alert("Please scan and fill all fields!");
-    }
+// Tombol Switch Kamera
+document.getElementById('switchCamera').addEventListener('click', function() {
+  // Stop kamera dulu
+  html5QrCode.stop().then(() => {
+    // Ganti facing mode
+    currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
+    startScanner();
+  }).catch(err => {
+    console.error("Camera stop error", err);
+  });
 });
 </script>
 
