@@ -267,12 +267,12 @@ function sendDataToSheet(data) {
 let scanTarget = "barcode"; // Default: pertama ke barcode
 
 function onScanSuccess(decodedText, decodedResult) {
-  console.log(Code scanned = ${decodedText});
+  console.log(`Code scanned = ${decodedText}`);
   
   document.getElementById(scanTarget).value = decodedText; // Isi kolom yang sesuai
 
   // Tampilkan notifikasi scan berhasil
-  document.getElementById("notifMessage").innerText = ✅ Barcode scanned to ${scanTarget}!;
+  document.getElementById("notifMessage").innerText = `✅ Barcode scanned to ${scanTarget}!`;
   
   document.getElementById("retryButton").style.display = "block"; // Tampilkan tombol retry
 
