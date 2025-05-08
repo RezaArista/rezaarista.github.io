@@ -73,6 +73,33 @@
       text-align: center;
       margin-top: 10px;
     }
+    .notification {
+      color: green;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+    }
+    #retryButton {
+      width: 100%;
+      background-color: #f44336;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+      display: none; /* Hidden by default */
+    }
+    #retryButton:hover {
+      background-color: #d32f2f;
+    }
   </style>
 </head>
 <body>
@@ -97,6 +124,9 @@
 </form>
 
 <div class="success" id="successMessage"></div>
+<div class="notification" id="notifMessage"></div> <!-- New notification message element -->
+<div class="error" id="errorMessage"></div> <!-- Error message element -->
+<button id="retryButton">🔄 Scan Again</button> <!-- Retry button -->
 
 <script>
 const sheetURL = "https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec"; // Ganti URL WebApp Anda
@@ -144,6 +174,13 @@ function sendDataToSheet(data) {
 function onScanSuccess(decodedText, decodedResult) {
   console.log(`Code scanned = ${decodedText}`);
   document.getElementById('barcode').value = decodedText;
+  
+  // Tampilkan notifikasi scan berhasil
+  document.getElementById("notifMessage").innerText = "✅ Barcode scanned successfully!";
+  
+  // Tampilkan tombol "Scan Again"
+  document.getElementById("retryButton").style.display = "block";
+
   html5QrCode.stop(); // stop setelah scan
 }
 
@@ -171,6 +208,14 @@ document.getElementById('switchCamera').addEventListener('click', function() {
   }).catch(err => {
     console.error("Camera stop error", err);
   });
+});
+
+// Tombol retry untuk scan ulang
+document.getElementById('retryButton').addEventListener('click', function() {
+  document.getElementById("notifMessage").innerText = ""; // Clear success message
+  document.getElementById('barcode').value = ""; // Clear barcode input
+  document.getElementById("retryButton").style.display = "none"; // Hide retry button
+  startScanner(); // Start scanning again
 });
 </script>
 
