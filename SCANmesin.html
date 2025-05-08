@@ -38,21 +38,6 @@
     #switchCamera:hover {
       background-color: #007B9E;
     }
-    #retryScan {
-      width: 100%;
-      background-color: #f44336;
-      color: white;
-      padding: 12px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      margin-top: 10px;
-      cursor: pointer;
-      display: none;
-    }
-    #retryScan:hover {
-      background-color: #e53935;
-    }
     form {
       background: #fff;
       padding: 15px;
@@ -88,6 +73,33 @@
       text-align: center;
       margin-top: 10px;
     }
+    .notification {
+      color: green;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+    }
+    #retryButton {
+      width: 100%;
+      background-color: #f44336;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+      display: none; /* Hidden by default */
+    }
+    #retryButton:hover {
+      background-color: #d32f2f;
+    }
   </style>
 </head>
 <body>
@@ -97,7 +109,6 @@
 <div id="reader"></div>
 
 <button id="switchCamera">🔄 Switch Camera</button>
-<button id="retryScan">🔁 Retry Scan</button>
 
 <form id="dataForm">
   <label>MCID (Barcode hasil scan):</label>
@@ -113,6 +124,9 @@
 </form>
 
 <div class="success" id="successMessage"></div>
+<div class="notification" id="notifMessage"></div> <!-- New notification message element -->
+<div class="error" id="errorMessage"></div> <!-- Error message element -->
+<button id="retryButton">🔄 Scan Again</button> <!-- Retry button -->
 
 <script>
 const sheetURL = "https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec"; // Ganti URL WebApp Anda
@@ -121,31 +135,23 @@ let html5QrCode = new Html5Qrcode("reader");
 let currentFacingMode = "environment"; // kamera belakang
 
 const qrConfig = { 
-  fps: 10, 
+  fps: 20, 
   qrbox: { width: 250, height: 250 }, 
-  aspectRatio: 16/9,
+  aspectRatio: 1,
   rememberLastUsedCamera: true,
   disableFlip: true
 };
 
-let scanInProgress = false; // Flag untuk melacak status scan
-
-// Fungsi mulai scanner
 function startScanner() {
-  if (scanInProgress) return; // Menghindari mulai scanner lagi jika sudah ada scan
-  scanInProgress = true;
-
   html5QrCode.start(
     { facingMode: currentFacingMode },
     qrConfig,
     onScanSuccess
   ).catch(err => {
     console.error("Camera start error", err);
-    scanInProgress = false;
   });
 }
 
-// Fungsi kirim data ke Google Sheets
 function sendDataToSheet(data) {
   fetch(sheetURL, {
     method: 'POST',
@@ -157,7 +163,7 @@ function sendDataToSheet(data) {
     document.getElementById("successMessage").innerText = "✅ Data sent successfully!";
     document.getElementById("dataForm").reset();
     setTimeout(() => {
-      startScanner(); // Restart kamera setelah berhasil kirim
+      startScanner(); // restart kamera
     }, 1000);
   }).catch(error => {
     console.error('Error!', error.message);
@@ -165,29 +171,29 @@ function sendDataToSheet(data) {
   });
 }
 
-// Fungsi berhasil scan barcode
 function onScanSuccess(decodedText, decodedResult) {
   console.log(`Code scanned = ${decodedText}`);
   document.getElementById('barcode').value = decodedText;
-  html5QrCode.stop(); // Stop scanner setelah berhasil scan
-  document.getElementById("retryScan").style.display = "block"; // Tampilkan tombol retry scan
-  scanInProgress = false;
+  
+  // Tampilkan notifikasi scan berhasil
+  document.getElementById("notifMessage").innerText = "✅ Barcode scanned successfully!";
+  
+  // Tampilkan tombol "Scan Again"
+  document.getElementById("retryButton").style.display = "block";
+
+  html5QrCode.stop(); // stop setelah scan
 }
 
-// Tombol ulang scan
-document.getElementById('retryScan').addEventListener('click', function() {
-  document.getElementById("retryScan").style.display = "none"; // Sembunyikan tombol retry
-  startScanner(); // Mulai ulang scan
-});
+startScanner();
 
 // Submit form
-document.getElementById('dataForm').addEventListener('submit', function(e) {
+document.getElementById('dataForm').addEventListener('submit', function(e){
   e.preventDefault();
   const barcode = document.getElementById('barcode').value;
   const line = document.getElementById('line').value;
   const fac = document.getElementById('fac').value;
 
-  if (barcode && line && fac) {
+  if(barcode && line && fac){
     sendDataToSheet({ barcode, line, fac });
   } else {
     alert("Please scan and fill all fields!");
@@ -204,7 +210,13 @@ document.getElementById('switchCamera').addEventListener('click', function() {
   });
 });
 
-startScanner();
+// Tombol retry untuk scan ulang
+document.getElementById('retryButton').addEventListener('click', function() {
+  document.getElementById("notifMessage").innerText = ""; // Clear success message
+  document.getElementById('barcode').value = ""; // Clear barcode input
+  document.getElementById("retryButton").style.display = "none"; // Hide retry button
+  startScanner(); // Start scanning again
+});
 </script>
 
 </body>
