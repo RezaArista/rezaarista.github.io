@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Barcode Scanner to Google Sheet</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+
+<h1>Scan Barcode</h1>
+<div id="reader" style="width:300px;"></div>
+
+<h2>Input Data</h2>
+<form id="dataForm">
+    Barcode (MCID): <input type="text" id="barcode" readonly><br><br>
+    Line: <input type="text" id="line"><br><br>
+    FAC: <input type="text" id="fac"><br><br>
+    <button type="submit">Submit to Google Sheets</button>
+</form>
+
+<script>
+const sheetURL = "https://docs.google.com/spreadsheets/d/1I1__D50cAN3hT7xBXg5r-C8TdpVpNWuVRIO06Oax0Wo/edit?usp=sharing"; // Ganti dengan URL Anda
+
+function sendDataToSheet(data) {
+    fetch(sheetURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    }).then(response => {
+        console.log('Success', response);
+        alert("Data sent successfully!");
+        document.getElementById("dataForm").reset();
+    }).catch(error => {
+        console.error('Error!', error.message);
+    });
+}
+
+function onScanSuccess(decodedText, decodedResult) {
+    console.log(`Code scanned = ${decodedText}`, decodedResult);
+    document.getElementById('barcode').value = decodedText;
+}
+
+document.getElementById('dataForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const barcode = document.getElementById('barcode').value;
+    const line = document.getElementById('line').value;
+    const fac = document.getElementById('fac').value;
+
+    if(barcode && line && fac){
+        sendDataToSheet({barcode, line, fac});
+    } else {
+        alert("Please scan barcode and fill all fields!");
+    }
+});
+
+let html5QrcodeScanner = new Html5QrcodeScanner(
+    "reader", 
+    { fps: 10, qrbox: 250 }
+);
+html5QrcodeScanner.render(onScanSuccess);
+</script>
+
+</body>
+</html>
