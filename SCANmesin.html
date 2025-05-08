@@ -253,8 +253,8 @@ function sendDataToSheet(data) {
 
   fetch(sheetURL, {
     method: 'POST',
-    body: formData,
-    mode: 'cors', // <<< ini wajib tambahkan
+    mode: 'cors', // <<<<<< wajib ada
+    body: formData
   }).then(response => response.json())
     .then(responseData => {
       console.log('Success', responseData);
@@ -271,6 +271,7 @@ function sendDataToSheet(data) {
       document.getElementById("errorMessage").innerText = "❌ Failed to send data!";
     });
 }
+
 
 
 
