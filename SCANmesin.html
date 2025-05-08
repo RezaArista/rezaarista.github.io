@@ -1,26 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Barcode Scanner to Google Sheet</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scan Barcode - Input Data</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      background-color: #f2f2f2;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 10px auto;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: white;
+    }
+    form {
+      background: #fff;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
 
 <h1>Scan Barcode</h1>
-<div id="reader" style="width:300px;"></div>
 
-<h2>Input Data</h2>
+<div id="reader"></div>
+
 <form id="dataForm">
-    Barcode (MCID): <input type="text" id="barcode" readonly><br><br>
-    Line: <input type="text" id="line"><br><br>
-    FAC: <input type="text" id="fac"><br><br>
-    <button type="submit">Submit to Google Sheets</button>
+  <label>MCID (Barcode hasil scan):</label>
+  <input type="text" id="barcode" readonly required>
+
+  <label>Line:</label>
+  <input type="text" id="line" placeholder="Input Line" required>
+
+  <label>FAC:</label>
+  <input type="text" id="fac" placeholder="Input FAC" required>
+
+  <button type="submit">Submit Data</button>
 </form>
 
-<script>
-const sheetURL = "https://docs.google.com/spreadsheets/d/1I1__D50cAN3hT7xBXg5r-C8TdpVpNWuVRIO06Oax0Wo/edit?usp=sharing"; // Ganti dengan URL Anda
+<div class="success" id="successMessage"></div>
 
+<script>
+const sheetURL = "YOUR_GOOGLE_SCRIPT_WEBAPP_URL"; // <-- Ganti dengan URL WebApp Anda
+
+// Kirim data ke Google Sheets
 function sendDataToSheet(data) {
     fetch(sheetURL, {
         method: 'POST',
@@ -31,18 +96,43 @@ function sendDataToSheet(data) {
         body: JSON.stringify(data)
     }).then(response => {
         console.log('Success', response);
-        alert("Data sent successfully!");
+        document.getElementById("successMessage").innerText = "✅ Data sent successfully!";
         document.getElementById("dataForm").reset();
     }).catch(error => {
         console.error('Error!', error.message);
+        document.getElementById("successMessage").innerText = "❌ Failed to send data!";
     });
 }
 
+// Setelah scan sukses
 function onScanSuccess(decodedText, decodedResult) {
-    console.log(`Code scanned = ${decodedText}`, decodedResult);
+    console.log(`Code scanned = ${decodedText}`);
     document.getElementById('barcode').value = decodedText;
 }
 
+// Setup Scanner
+let html5QrCode = new Html5Qrcode("reader");
+const qrConfig = { 
+    fps: 5, 
+    qrbox: { width: 250, height: 250 },
+    aspectRatio: 1.0
+};
+
+// Minta kamera belakang
+Html5Qrcode.getCameras().then(cameras => {
+    if (cameras && cameras.length) {
+        let backCamera = cameras.find(cam => cam.label.toLowerCase().includes('back')) || cameras[0];
+        html5QrCode.start(
+            { deviceId: { exact: backCamera.id } },
+            qrConfig,
+            onScanSuccess
+        );
+    }
+}).catch(err => {
+    console.error(err);
+});
+
+// Submit form
 document.getElementById('dataForm').addEventListener('submit', function(e){
     e.preventDefault();
     const barcode = document.getElementById('barcode').value;
@@ -50,17 +140,11 @@ document.getElementById('dataForm').addEventListener('submit', function(e){
     const fac = document.getElementById('fac').value;
 
     if(barcode && line && fac){
-        sendDataToSheet({barcode, line, fac});
+        sendDataToSheet({ barcode, line, fac });
     } else {
-        alert("Please scan barcode and fill all fields!");
+        alert("Please scan and fill all fields!");
     }
 });
-
-let html5QrcodeScanner = new Html5QrcodeScanner(
-    "reader", 
-    { fps: 10, qrbox: 250 }
-);
-html5QrcodeScanner.render(onScanSuccess);
 </script>
 
 </body>
