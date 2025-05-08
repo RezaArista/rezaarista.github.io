@@ -102,12 +102,14 @@
 const sheetURL = "https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec"; // Ganti URL WebApp Anda
 
 let html5QrCode = new Html5Qrcode("reader");
-let currentFacingMode = "environment"; // default kamera belakang
+let currentFacingMode = "environment"; // kamera belakang
 
 const qrConfig = { 
-  fps: 5,
-  aspectRatio: 1.0,
-  rememberLastUsedCamera: true
+  fps: 10, 
+  qrbox: { width: 250, height: 250 }, 
+  aspectRatio: 16/9,
+  rememberLastUsedCamera: true,
+  disableFlip: true
 };
 
 function startScanner() {
@@ -120,8 +122,6 @@ function startScanner() {
   });
 }
 
-
-// Fungsi kirim data
 function sendDataToSheet(data) {
   fetch(sheetURL, {
     method: 'POST',
@@ -132,22 +132,24 @@ function sendDataToSheet(data) {
     console.log('Success', response);
     document.getElementById("successMessage").innerText = "✅ Data sent successfully!";
     document.getElementById("dataForm").reset();
+    setTimeout(() => {
+      startScanner(); // restart kamera
+    }, 1000);
   }).catch(error => {
     console.error('Error!', error.message);
     document.getElementById("successMessage").innerText = "❌ Failed to send data!";
   });
 }
 
-// Fungsi saat berhasil scan
 function onScanSuccess(decodedText, decodedResult) {
   console.log(`Code scanned = ${decodedText}`);
   document.getElementById('barcode').value = decodedText;
+  html5QrCode.stop(); // stop setelah scan
 }
 
-// Start kamera awal
 startScanner();
 
-// Event submit form
+// Submit form
 document.getElementById('dataForm').addEventListener('submit', function(e){
   e.preventDefault();
   const barcode = document.getElementById('barcode').value;
@@ -161,11 +163,9 @@ document.getElementById('dataForm').addEventListener('submit', function(e){
   }
 });
 
-// Tombol Switch Kamera
+// Tombol switch kamera
 document.getElementById('switchCamera').addEventListener('click', function() {
-  // Stop kamera dulu
   html5QrCode.stop().then(() => {
-    // Ganti facing mode
     currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
     startScanner();
   }).catch(err => {
