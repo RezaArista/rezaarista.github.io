@@ -301,6 +301,7 @@ document.getElementById('dataForm').addEventListener('submit', function(e){
   const iot = document.getElementById('iot').value;
 
   if(barcode && line && fac && barcode2 && iot){
+    console.log("Data to send:", { barcode, line, fac, barcode2, iot });
     sendDataToSheet({ barcode, line, fac, barcode2, iot });
   } else {
     alert("Please fill all fields!");
