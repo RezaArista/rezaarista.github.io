@@ -105,12 +105,11 @@ let html5QrCode = new Html5Qrcode("reader");
 let currentFacingMode = "environment"; // default kamera belakang
 
 const qrConfig = { 
-  fps: 5, 
-  qrbox: { width: 250, height: 250 },
-  aspectRatio: 1.0
+  fps: 5,
+  aspectRatio: 1.0,
+  rememberLastUsedCamera: true
 };
 
-// Fungsi untuk mulai kamera
 function startScanner() {
   html5QrCode.start(
     { facingMode: currentFacingMode },
@@ -120,6 +119,7 @@ function startScanner() {
     console.error("Camera start error", err);
   });
 }
+
 
 // Fungsi kirim data
 function sendDataToSheet(data) {
