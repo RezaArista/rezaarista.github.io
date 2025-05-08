@@ -45,27 +45,69 @@
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
+    #dataForm {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: 20px auto;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #333;
+    }
+    
     input[type="text"] {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
-      margin-bottom: 20px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
       font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
     }
-    button[type="submit"] {
+    
+    .scan-button {
+      display: block;
+      margin-top: 8px;
       width: 100%;
-      background-color: #4CAF50;
+      padding: 10px;
+      background-color: #007BFF;
       color: white;
-      padding: 12px;
       font-size: 16px;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
     }
-    button[type="submit"]:hover {
-      background-color: #45a049;
+    
+    #scanBarcode2 {
+      background-color: #28a745; /* Warna hijau untuk Scan MAC */
+    }
+    
+    .scan-button:hover {
+      opacity: 0.9;
+    }
+    
+    .submit-button {
+      width: 100%;
+      padding: 15px;
+      background-color: #17a2b8;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    
+    .submit-button:hover {
+      background-color: #138496;
     }
     .success {
       color: green;
@@ -137,24 +179,34 @@
 <button id="retryButton">🔄 Scan Again</button> <!-- Retry button -->
 
 <form id="dataForm">
-  <label>MCID (Barcode hasil scan 1):</label>
-  <input type="text" id="barcode" placeholder="Scan atau ketik manual" required>
-  <button type="button" id="scanBarcode1">🔍 Scan Barcode 1</button>
+  <div class="form-group">
+    <label><strong>MCID</strong></label>
+    <input type="text" id="barcode" placeholder="Scan atau ketik manual" required>
+    <button type="button" id="scanBarcode1" class="scan-button">🔵 Scan MCID</button>
+  </div>
 
-  <label>Line:</label>
-  <input type="text" id="line" placeholder="Input Line" required>
+  <div class="form-group">
+    <label><strong>Line</strong></label>
+    <input type="text" id="line" placeholder="Input Line" required>
+  </div>
 
-  <label>FAC:</label>
-  <input type="text" id="fac" placeholder="Input FAC" required>
+  <div class="form-group">
+    <label><strong>FAC</strong></label>
+    <input type="text" id="fac" placeholder="Input FAC" required>
+  </div>
 
-  <label>MCID 2 (Barcode hasil scan 2):</label>
-  <input type="text" id="barcode2" placeholder="Scan atau ketik manual" required>
-  <button type="button" id="scanBarcode2">🔍 Scan Barcode 2</button>
+  <div class="form-group">
+    <label><strong>MacAddress</strong></label>
+    <input type="text" id="barcode2" placeholder="Scan atau ketik manual" required>
+    <button type="button" id="scanBarcode2" class="scan-button">🟢 Scan MAC</button>
+  </div>
 
-  <label>IoT:</label>
-  <input type="text" id="iot" placeholder="Input IoT" required>
+  <div class="form-group">
+    <label><strong>IoT</strong></label>
+    <input type="text" id="iot" placeholder="Input IoT" required>
+  </div>
 
-  <button type="submit">Submit Data</button>
+  <button type="submit" class="submit-button">🚀 Submit Data</button>
 </form>
 
 
