@@ -246,24 +246,17 @@ function startScanner() {
 function sendDataToSheet(data) {
   fetch(sheetURL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',  // Memberitahu server bahwa kita mengirim data dalam format JSON
-    },
-    body: JSON.stringify({
-      barcode: data.barcode,
-      line: data.line,
-      fac: data.fac,
-      barcode2: data.barcode2,
-      iot: data.iot
-    })
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
   }).then(response => {
     console.log('Success', response);
     document.getElementById("successMessage").innerText = "✅ Data sent successfully!";
     document.getElementById("dataForm").reset();
-    document.getElementById("popupMessage").style.display = "block"; // Menampilkan popup
+    document.getElementById("popupMessage").style.display = "block"; // Show popup
     setTimeout(() => {
-      document.getElementById("popupMessage").style.display = "none"; // Sembunyikan popup setelah 3 detik
-      startScanner(); // Mulai ulang kamera
+      document.getElementById("popupMessage").style.display = "none"; // Hide popup after 3 seconds
+      startScanner(); // Restart camera after success
     }, 3000);
   }).catch(error => {
     console.error('Error!', error.message);
@@ -271,16 +264,15 @@ function sendDataToSheet(data) {
   });
 }
 
-
 let scanTarget = "barcode"; // Default: pertama ke barcode
 
 function onScanSuccess(decodedText, decodedResult) {
-  console.log(`Code scanned = ${decodedText}`);
+  console.log(Code scanned = ${decodedText});
   
   document.getElementById(scanTarget).value = decodedText; // Isi kolom yang sesuai
 
   // Tampilkan notifikasi scan berhasil
-  document.getElementById("notifMessage").innerText = `✅ Barcode scanned to ${scanTarget}!`;
+  document.getElementById("notifMessage").innerText = ✅ Barcode scanned to ${scanTarget}!;
   
   document.getElementById("retryButton").style.display = "block"; // Tampilkan tombol retry
 
@@ -340,4 +332,4 @@ document.getElementById('popupButton').addEventListener('click', function() {
 </script>
 
 </body>
-</html>
+</html> 
