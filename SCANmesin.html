@@ -24,6 +24,35 @@
       border-radius: 8px;
       background: white;
     }
+    #switchCamera {
+      width: 100%;
+      background-color: #008CBA;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    #switchCamera:hover {
+      background-color: #007B9E;
+    }
+    #retryScan {
+      width: 100%;
+      background-color: #f44336;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      cursor: pointer;
+      display: none;
+    }
+    #retryScan:hover {
+      background-color: #e53935;
+    }
     form {
       background: #fff;
       padding: 15px;
@@ -67,6 +96,9 @@
 
 <div id="reader"></div>
 
+<button id="switchCamera">🔄 Switch Camera</button>
+<button id="retryScan">🔁 Retry Scan</button>
+
 <form id="dataForm">
   <label>MCID (Barcode hasil scan):</label>
   <input type="text" id="barcode" readonly required>
@@ -96,39 +128,24 @@ const qrConfig = {
   disableFlip: true
 };
 
-// Fungsi untuk menggambar kotak pada barcode yang terdeteksi
-function drawBoundingBox(decodedResult) {
-  const video = document.querySelector("video");
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  
-  // Ambil koordinat barcode
-  const box = decodedResult.result?.box;
-  if (box) {
-    context.beginPath();
-    context.lineWidth = 5;
-    context.strokeStyle = "red";
-    context.rect(box[0].x, box[0].y, box[2].x - box[0].x, box[2].y - box[0].y);
-    context.stroke();
-  }
-  document.getElementById("reader").appendChild(canvas);
-}
+let scanInProgress = false; // Flag untuk melacak status scan
 
-// Fungsi untuk memulai pemindaian
+// Fungsi mulai scanner
 function startScanner() {
+  if (scanInProgress) return; // Menghindari mulai scanner lagi jika sudah ada scan
+  scanInProgress = true;
+
   html5QrCode.start(
     { facingMode: currentFacingMode },
     qrConfig,
     onScanSuccess
   ).catch(err => {
     console.error("Camera start error", err);
+    scanInProgress = false;
   });
 }
 
-// Fungsi kirim data
+// Fungsi kirim data ke Google Sheets
 function sendDataToSheet(data) {
   fetch(sheetURL, {
     method: 'POST',
@@ -139,67 +156,55 @@ function sendDataToSheet(data) {
     console.log('Success', response);
     document.getElementById("successMessage").innerText = "✅ Data sent successfully!";
     document.getElementById("dataForm").reset();
+    setTimeout(() => {
+      startScanner(); // Restart kamera setelah berhasil kirim
+    }, 1000);
   }).catch(error => {
     console.error('Error!', error.message);
     document.getElementById("successMessage").innerText = "❌ Failed to send data!";
   });
 }
 
-// Fungsi saat berhasil scan
+// Fungsi berhasil scan barcode
 function onScanSuccess(decodedText, decodedResult) {
   console.log(`Code scanned = ${decodedText}`);
   document.getElementById('barcode').value = decodedText;
-
-  // Gambar kotak di sekitar barcode
-  drawBoundingBox(decodedResult);
-  
-  html5QrCode.stop(); // stop setelah scan
+  html5QrCode.stop(); // Stop scanner setelah berhasil scan
+  document.getElementById("retryScan").style.display = "block"; // Tampilkan tombol retry scan
+  scanInProgress = false;
 }
 
-// Memulai pemindaian barcode
-startScanner();
+// Tombol ulang scan
+document.getElementById('retryScan').addEventListener('click', function() {
+  document.getElementById("retryScan").style.display = "none"; // Sembunyikan tombol retry
+  startScanner(); // Mulai ulang scan
+});
 
 // Submit form
-document.getElementById('dataForm').addEventListener('submit', function(e){
+document.getElementById('dataForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const barcode = document.getElementById('barcode').value;
   const line = document.getElementById('line').value;
   const fac = document.getElementById('fac').value;
 
-  if(barcode && line && fac){
+  if (barcode && line && fac) {
     sendDataToSheet({ barcode, line, fac });
   } else {
     alert("Please scan and fill all fields!");
   }
 });
 
-// Event listener untuk touch pada area pemindaian
-document.getElementById("reader").addEventListener('touchstart', function(event) {
-  event.preventDefault();
-  const touchX = event.touches[0].clientX;
-  const touchY = event.touches[0].clientY;
-  
-  // Hitung posisi relatif dari sentuhan terhadap elemen pemindaian
-  const reader = document.getElementById("reader");
-  const rect = reader.getBoundingClientRect();
-  const relX = touchX - rect.left;
-  const relY = touchY - rect.top;
-
-  // Tentukan ukuran dan posisi kotak pemindaian
-  const qrBoxSize = 250;
-  const startX = Math.max(0, relX - qrBoxSize / 2);
-  const startY = Math.max(0, relY - qrBoxSize / 2);
-
-  // Mengatur posisi dan ukuran kotak pemindaian berdasarkan sentuhan
-  qrConfig.qrbox = { width: qrBoxSize, height: qrBoxSize, x: startX, y: startY };
-
-  // Mulai pemindaian baru dengan area pemindaian yang diperbarui
+// Tombol switch kamera
+document.getElementById('switchCamera').addEventListener('click', function() {
   html5QrCode.stop().then(() => {
+    currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
     startScanner();
   }).catch(err => {
-    console.error("Error stopping camera", err);
+    console.error("Camera stop error", err);
   });
 });
+
+startScanner();
 </script>
 
 </body>
