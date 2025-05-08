@@ -244,24 +244,26 @@ function startScanner() {
 }
 
 function sendDataToSheet(data) {
-  const formData = new FormData();
-  formData.append('barcode', data.barcode);
-  formData.append('line', data.line);
-  formData.append('fac', data.fac);
-  formData.append('barcode2', data.barcode2);
-  formData.append('iot', data.iot);
-
   fetch(sheetURL, {
     method: 'POST',
-    body: formData
+    headers: {
+      'Content-Type': 'application/json',  // Memberitahu server bahwa kita mengirim data dalam format JSON
+    },
+    body: JSON.stringify({
+      barcode: data.barcode,
+      line: data.line,
+      fac: data.fac,
+      barcode2: data.barcode2,
+      iot: data.iot
+    })
   }).then(response => {
     console.log('Success', response);
     document.getElementById("successMessage").innerText = "✅ Data sent successfully!";
     document.getElementById("dataForm").reset();
-    document.getElementById("popupMessage").style.display = "block"; // Show popup
+    document.getElementById("popupMessage").style.display = "block"; // Menampilkan popup
     setTimeout(() => {
-      document.getElementById("popupMessage").style.display = "none"; // Hide popup after 3 seconds
-      startScanner(); // Restart camera after success
+      document.getElementById("popupMessage").style.display = "none"; // Sembunyikan popup setelah 3 detik
+      startScanner(); // Mulai ulang kamera
     }, 3000);
   }).catch(error => {
     console.error('Error!', error.message);
