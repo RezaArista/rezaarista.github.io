@@ -100,6 +100,30 @@
     #retryButton:hover {
       background-color: #d32f2f;
     }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .popup button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .popup button:hover {
+      background-color: #45a049;
+    }
   </style>
 </head>
 <body>
@@ -109,6 +133,8 @@
 <div id="reader"></div>
 
 <button id="switchCamera">🔄 Switch Camera</button>
+
+<button id="retryButton">🔄 Scan Again</button> <!-- Retry button -->
 
 <form id="dataForm">
   <label>MCID (Barcode hasil scan):</label>
@@ -126,7 +152,11 @@
 <div class="success" id="successMessage"></div>
 <div class="notification" id="notifMessage"></div> <!-- New notification message element -->
 <div class="error" id="errorMessage"></div> <!-- Error message element -->
-<button id="retryButton">🔄 Scan Again</button> <!-- Retry button -->
+
+<div class="popup" id="popupMessage">
+  <p>✅ Data sent successfully!</p>
+  <button id="popupButton">Close</button>
+</div>
 
 <script>
 const sheetURL = "https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec"; // Ganti URL WebApp Anda
@@ -135,9 +165,9 @@ let html5QrCode = new Html5Qrcode("reader");
 let currentFacingMode = "environment"; // kamera belakang
 
 const qrConfig = { 
-  fps: 20, 
+  fps: 10, 
   qrbox: { width: 250, height: 250 }, 
-  aspectRatio: 1,
+  aspectRatio: 16/9,
   rememberLastUsedCamera: true,
   disableFlip: true
 };
@@ -162,12 +192,14 @@ function sendDataToSheet(data) {
     console.log('Success', response);
     document.getElementById("successMessage").innerText = "✅ Data sent successfully!";
     document.getElementById("dataForm").reset();
+    document.getElementById("popupMessage").style.display = "block"; // Show popup
     setTimeout(() => {
-      startScanner(); // restart kamera
-    }, 1000);
+      document.getElementById("popupMessage").style.display = "none"; // Hide popup after 3 seconds
+      startScanner(); // Restart camera after success
+    }, 3000);
   }).catch(error => {
     console.error('Error!', error.message);
-    document.getElementById("successMessage").innerText = "❌ Failed to send data!";
+    document.getElementById("errorMessage").innerText = "❌ Failed to send data!";
   });
 }
 
@@ -216,6 +248,11 @@ document.getElementById('retryButton').addEventListener('click', function() {
   document.getElementById('barcode').value = ""; // Clear barcode input
   document.getElementById("retryButton").style.display = "none"; // Hide retry button
   startScanner(); // Start scanning again
+});
+
+// Close popup
+document.getElementById('popupButton').addEventListener('click', function() {
+  document.getElementById("popupMessage").style.display = "none"; // Hide popup
 });
 </script>
 
