@@ -246,10 +246,16 @@ function startScanner() {
 function sendDataToSheet(data) {
   console.log('Data yang dikirim:', data);
 
+  const formData = new FormData();
+  formData.append('barcode', data.barcode);
+  formData.append('line', data.line);
+  formData.append('fac', data.fac);
+  formData.append('barcode2', data.barcode2);
+  formData.append('iot', data.iot);
+
   fetch('https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
+    body: formData, 
   })
   .then(response => response.text())
   .then(result => {
@@ -267,6 +273,7 @@ function sendDataToSheet(data) {
     document.getElementById("errorMessage").innerText = "❌ Gagal mengirim data!";
   });
 }
+
 
 
 let scanTarget = "barcode"; // Default: pertama ke barcode
