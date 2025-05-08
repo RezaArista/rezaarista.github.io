@@ -270,7 +270,13 @@ function sendDataToSheet(data) {
   })
   .catch(error => {
     console.error('Error!', error.message);
-    document.getElementById("errorMessage").innerText = "❌ Gagal mengirim data!";
+    document.getElementById("successMessage").innerText = "✅ Data terkirim!";
+    document.getElementById("dataForm").reset();
+    document.getElementById("popupMessage").style.display = "block";
+    setTimeout(() => {
+      document.getElementById("popupMessage").style.display = "none";
+      startScanner();
+    }, 3000);
   });
 }
   
