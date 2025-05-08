@@ -244,6 +244,7 @@ function startScanner() {
 }
 
 function sendDataToSheet(data) {
+   console.log("Data being sent to the server:", data);
   fetch(sheetURL, {
     method: 'POST',
     mode: 'no-cors',
