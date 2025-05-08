@@ -137,8 +137,9 @@
 <button id="retryButton">🔄 Scan Again</button> <!-- Retry button -->
 
 <form id="dataForm">
-  <label>MCID (Barcode hasil scan):</label>
-  <input type="text" id="barcode" readonly required>
+  <label>MCID (Barcode hasil scan 1):</label>
+  <input type="text" id="barcode" placeholder="Scan atau ketik manual" required>
+  <button type="button" id="scanBarcode1">🔍 Scan Barcode 1</button>
 
   <label>Line:</label>
   <input type="text" id="line" placeholder="Input Line" required>
@@ -146,8 +147,16 @@
   <label>FAC:</label>
   <input type="text" id="fac" placeholder="Input FAC" required>
 
+  <label>MCID 2 (Barcode hasil scan 2):</label>
+  <input type="text" id="barcode2" placeholder="Scan atau ketik manual" required>
+  <button type="button" id="scanBarcode2">🔍 Scan Barcode 2</button>
+
+  <label>IoT:</label>
+  <input type="text" id="iot" placeholder="Input IoT" required>
+
   <button type="submit">Submit Data</button>
 </form>
+
 
 <div class="success" id="successMessage"></div>
 <div class="notification" id="notifMessage"></div> <!-- New notification message element -->
@@ -203,20 +212,32 @@ function sendDataToSheet(data) {
   });
 }
 
+let scanTarget = "barcode"; // Default: pertama ke barcode
+
 function onScanSuccess(decodedText, decodedResult) {
   console.log(`Code scanned = ${decodedText}`);
-  document.getElementById('barcode').value = decodedText;
   
-  // Tampilkan notifikasi scan berhasil
-  document.getElementById("notifMessage").innerText = "✅ Barcode scanned successfully!";
-  
-  // Tampilkan tombol "Scan Again"
-  document.getElementById("retryButton").style.display = "block";
+  document.getElementById(scanTarget).value = decodedText; // Isi kolom yang sesuai
 
-  html5QrCode.stop(); // stop setelah scan
+  // Tampilkan notifikasi scan berhasil
+  document.getElementById("notifMessage").innerText = `✅ Barcode scanned to ${scanTarget}!`;
+  
+  document.getElementById("retryButton").style.display = "block"; // Tampilkan tombol retry
+
+  html5QrCode.stop(); // stop kamera setelah scan
 }
 
-startScanner();
+// Event tombol Scan Barcode 1
+document.getElementById('scanBarcode1').addEventListener('click', function() {
+  scanTarget = "barcode"; // Set target kolom
+  startScanner();
+});
+
+// Event tombol Scan Barcode 2
+document.getElementById('scanBarcode2').addEventListener('click', function() {
+  scanTarget = "barcode2"; // Set target kolom
+  startScanner();
+});
 
 // Submit form
 document.getElementById('dataForm').addEventListener('submit', function(e){
@@ -224,11 +245,13 @@ document.getElementById('dataForm').addEventListener('submit', function(e){
   const barcode = document.getElementById('barcode').value;
   const line = document.getElementById('line').value;
   const fac = document.getElementById('fac').value;
+  const barcode2 = document.getElementById('barcode2').value;
+  const iot = document.getElementById('iot').value;
 
-  if(barcode && line && fac){
-    sendDataToSheet({ barcode, line, fac });
+  if(barcode && line && fac && barcode2 && iot){
+    sendDataToSheet({ barcode, line, fac, barcode2, iot });
   } else {
-    alert("Please scan and fill all fields!");
+    alert("Please fill all fields!");
   }
 });
 
