@@ -220,7 +220,7 @@
 </div>
 
 <script>
-const sheetURL = "https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec"; // Ganti URL WebApp Anda
+const sheetURL = "https://script.google.com/macros/s/AKfycbxjNBJgMtV8rpRwv3g38pdjjZ_rg9WanS0tREUzuz3BrL7rMHkDtq-3cjZdxFfLFdhy3A/exec"; // Ganti URL WebApp Anda
 
 let html5QrCode = new Html5Qrcode("reader");
 let currentFacingMode = "environment"; // kamera belakang
@@ -253,7 +253,7 @@ function sendDataToSheet(data) {
   formData.append('barcode2', data.barcode2);
   formData.append('iot', data.iot);
 
-  fetch('https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec', {
+  fetch('https://script.google.com/macros/s/AKfycbxjNBJgMtV8rpRwv3g38pdjjZ_rg9WanS0tREUzuz3BrL7rMHkDtq-3cjZdxFfLFdhy3A/exec', {
     method: 'POST',
     body: formData, 
   })
@@ -285,37 +285,15 @@ let scanTarget = "barcode"; // Default: pertama ke barcode
 function onScanSuccess(decodedText, decodedResult) {
   console.log(`Code scanned = ${decodedText}`);
   
-  // Cek ke Google Sheet dulu apakah MCID ditemukan
-  if (scanTarget === "barcode") {
-    checkMCID(decodedText).then(found => {
-      if (found) {
-        document.getElementById(scanTarget).value = decodedText;
-        document.getElementById("notifMessage").innerText = `✅ MCID found and scanned to ${scanTarget}!`;
-      } else {
-        document.getElementById("errorMessage").innerText = "❌ MCID not found in sheet!";
-      }
-      document.getElementById("retryButton").style.display = "block";
-      html5QrCode.stop(); // Stop kamera
-    });
-  } else {
-    document.getElementById(scanTarget).value = decodedText;
-    document.getElementById("notifMessage").innerText = `✅ Barcode scanned to ${scanTarget}!`;
-    document.getElementById("retryButton").style.display = "block";
-    html5QrCode.stop();
-  }
-}
+  document.getElementById(scanTarget).value = decodedText; // Isi kolom yang sesuai
 
-async function checkMCID(mcid) {
-  try {
-    const response = await fetch(`https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec?mcid=${mcid}`);
-    const text = await response.text();
-    return text.trim() === "FOUND";
-  } catch (err) {
-    console.error("Check MCID error", err);
-    return false;
-  }
-}
+  // Tampilkan notifikasi scan berhasil
+  document.getElementById("notifMessage").innerText = `✅ Barcode scanned to ${scanTarget}!`;
+  
+  document.getElementById("retryButton").style.display = "block"; // Tampilkan tombol retry
 
+  html5QrCode.stop(); // stop kamera setelah scan
+}
 
 // Event tombol Scan Barcode 1
 document.getElementById('scanBarcode1').addEventListener('click', function() {
