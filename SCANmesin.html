@@ -220,7 +220,7 @@
 </div>
 
 <script>
-const sheetURL = "https://script.google.com/macros/s/AKfycbxjNBJgMtV8rpRwv3g38pdjjZ_rg9WanS0tREUzuz3BrL7rMHkDtq-3cjZdxFfLFdhy3A/exec"; // Ganti URL WebApp Anda
+const sheetURL = "https://script.google.com/macros/s/AKfycbwhjTvD_cVi7PjJ_n-1f9I0CIjXoMedLX_2POJViqc_QBUP3Og9i0CVYBWP0Zl1PnVA/exec"; // Ganti URL WebApp Anda
 
 let html5QrCode = new Html5Qrcode("reader");
 let currentFacingMode = "environment"; // kamera belakang
@@ -253,7 +253,7 @@ function sendDataToSheet(data) {
   formData.append('barcode2', data.barcode2);
   formData.append('iot', data.iot);
 
-  fetch('https://script.google.com/macros/s/AKfycbxjNBJgMtV8rpRwv3g38pdjjZ_rg9WanS0tREUzuz3BrL7rMHkDtq-3cjZdxFfLFdhy3A/exec', {
+  fetch('https://script.google.com/macros/s/AKfycbwhjTvD_cVi7PjJ_n-1f9I0CIjXoMedLX_2POJViqc_QBUP3Og9i0CVYBWP0Zl1PnVA/exec', {
     method: 'POST',
     body: formData, 
   })
@@ -307,7 +307,7 @@ function onScanSuccess(decodedText, decodedResult) {
 
 async function checkMCID(mcid) {
   try {
-    const response = await fetch(`https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec?mcid=${mcid}`);
+    const response = await fetch(`https://script.google.com/macros/s/AKfycbwhjTvD_cVi7PjJ_n-1f9I0CIjXoMedLX_2POJViqc_QBUP3Og9i0CVYBWP0Zl1PnVA/exec?mcid=${mcid}`);
     const text = await response.text();
     return text.trim() === "FOUND";
   } catch (err) {
