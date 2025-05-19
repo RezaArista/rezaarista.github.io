@@ -285,14 +285,35 @@ let scanTarget = "barcode"; // Default: pertama ke barcode
 function onScanSuccess(decodedText, decodedResult) {
   console.log(`Code scanned = ${decodedText}`);
   
-  document.getElementById(scanTarget).value = decodedText; // Isi kolom yang sesuai
+  // Cek ke Google Sheet dulu apakah MCID ditemukan
+  if (scanTarget === "barcode") {
+    checkMCID(decodedText).then(found => {
+      if (found) {
+        document.getElementById(scanTarget).value = decodedText;
+        document.getElementById("notifMessage").innerText = `✅ MCID found and scanned to ${scanTarget}!`;
+      } else {
+        document.getElementById("errorMessage").innerText = "❌ MCID not found in sheet!";
+      }
+      document.getElementById("retryButton").style.display = "block";
+      html5QrCode.stop(); // Stop kamera
+    });
+  } else {
+    document.getElementById(scanTarget).value = decodedText;
+    document.getElementById("notifMessage").innerText = `✅ Barcode scanned to ${scanTarget}!`;
+    document.getElementById("retryButton").style.display = "block";
+    html5QrCode.stop();
+  }
+}
 
-  // Tampilkan notifikasi scan berhasil
-  document.getElementById("notifMessage").innerText = `✅ Barcode scanned to ${scanTarget}!`;
-  
-  document.getElementById("retryButton").style.display = "block"; // Tampilkan tombol retry
-
-  html5QrCode.stop(); // stop kamera setelah scan
+async function checkMCID(mcid) {
+  try {
+    const response = await fetch(`https://script.google.com/macros/s/AKfycbyYlRYuv1GSOWobWlfVZrhhWNeBQFoBPDU_GSGojRYAaaGRUA1v6HY-b1PNxFO5yFOAhw/exec?mcid=${mcid}`);
+    const text = await response.text();
+    return text.trim() === "FOUND";
+  } catch (err) {
+    console.error("Check MCID error", err);
+    return false;
+  }
 }
 
 // Event tombol Scan Barcode 1
