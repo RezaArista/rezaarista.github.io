@@ -6,7 +6,8 @@
     <title>Dashboard Keadaan KOS</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <style>
@@ -216,6 +217,8 @@
     const humData = [];      // Menyimpan kelembapan
 
     const ctx = document.getElementById('tempHumChart').getContext('2d');
+    Chart.register(ChartDataLabels);
+    
     const tempHumChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -269,8 +272,22 @@
                         drawOnChartArea: false
                     }
                 }
+            },
+            plugins: {
+                datalabels: {
+                    align: 'top',
+                    anchor: 'end',
+                    color: 'black',
+                    font: {
+                        weight: 'bold'
+                    },
+                    formatter: function(value) {
+                        return value.y !== undefined ? value.y : value; // untuk kasus jika data berupa objek {x, y}
+                    }
+                }
             }
-        }
+        },
+        plugins: [ChartDataLabels]
     });
 
 
