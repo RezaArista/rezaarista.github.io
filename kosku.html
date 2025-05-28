@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Keadaan KOS</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #36D1DC, #5B86E5);
+            margin: 0;
+            padding: 0;
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .status {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .connected { background: #28a745; color: white; }
+        .error { background: #dc3545; color: white; }
+        .reconnecting { background: #ffc107; color: black; }
+        .offline { background: #6c757d; color: white; }
+
+        .data-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .data-box {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 12px;
+            transition: 0.3s ease-in-out;
+            text-align: center;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .data-box:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(1.05);
+        }
+
+        .location {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .temp, .hum {
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .temp { color: #ff5733; }
+        .hum { color: #1E90FF; }
+
+        .config {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .config input {
+            padding: 7px;
+            font-size: 16px;
+            width: 220px;
+            text-align: center;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: none;
+            outline: none;
+        }
+
+        .config button {
+            margin-top: 10px;
+            padding: 7px 15px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        .config button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard TEMP & HUM</h1>
+        <p class="status offline" id="status">Connecting...</p>
+
+        <canvas id="tempHumChart" width="800" height="400"></canvas>
+
+        <div class="config">
+            <label>MAC Address: </label>
+            <input type="text" id="macAddress" value="24:DC:C3:9C:13:9C">
+            <button onclick="updateTopics()">Set MAC</button>
+        </div>
+
+        <div class="data-section">
+            <!-- Wirosari -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>KOS REZA</div>
+                <p>Temperature: <span id="temp" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="hum" class="hum">--</span> %</p>
+            </div>
+
+            <!-- Purwodadi -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>PURWODADI</div>
+                <p>Temperature: <span id="temppwd" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="humpwd" class="hum">--</span> %</p>
+            </div>
+        </div>
+
+        <div class="config">
+            <label>MAC Address: </label>
+            <input type="text" id="macAddress1" value="E0:5A:1B:A0:14:50">
+            <button onclick="updateTopics1()">Set MAC</button>
+        </div>
+
+        <div class="data-section">
+            <!-- Wirosari -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>JAM OFFICE</div>
+                <p>Temperature: <span id="temp1" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="hum1" class="hum">--</span> %</p>
+            </div>
+
+            <!-- Purwodadi -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>PURWODADI</div>
+                <p>Temperature: <span id="temppwd1" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="humpwd1" class="hum">--</span> %</p>
+            </div>
+        </div>
+        <div class="config">
+            <label>MAC Address: </label>
+            <input type="text" id="macAddress2" value="24:DC:C3:9C:12:A4">
+            <button onclick="updateTopics2()">Set MAC</button>
+        </div>
+
+        <div class="data-section">
+            <!-- Wirosari -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>RUMAH YUSUF</div>
+                <p>Temperature: <span id="temp2" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="hum2" class="hum">--</span> %</p>
+            </div>
+
+            <!-- Purwodadi -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>PURWODADI</div>
+                <p>Temperature: <span id="temppwd2" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="humpwd2" class="hum">--</span> %</p>
+            </div>
+        </div>
+
+        <div class="config">
+            <label>MAC Address: </label>
+            <input type="text" id="macAddress3" value="24:DC:C3:9C:26:B8">
+            <button onclick="updateTopics3()">Set MAC</button>
+        </div>
+        <div class="data-section">
+            <!-- Wirosari -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>RUMAH REZA</div>
+                <p>Temperature: <span id="temp3" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="hum3" class="hum">--</span> %</p>
+            </div>
+
+            <!-- BLORa -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>BLORA</div>
+                <p>Temperature: <span id="temppwd3" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="humpwd3" class="hum">--</span> %</p>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const mqttBroker = "wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt";
+    const mqttUser = "rezaap";
+    const mqttPassword = "Reza123456";
+    const labels = [];       // Menyimpan waktu
+    const tempData = [];     // Menyimpan suhu
+    const humData = [];      // Menyimpan kelembapan
+
+    const ctx = document.getElementById('tempHumChart').getContext('2d');
+    const tempHumChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Suhu (°C)',
+                    data: tempData,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    yAxisID: 'y',
+                },
+                {
+                    label: 'Kelembapan (%)',
+                    data: humData,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    yAxisID: 'y1',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'hour'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Waktu'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Suhu (°C)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Kelembapan (%)'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    });
+
+
+
+    let macAddress = document.getElementById("macAddress").value;
+    let macAddress1 = document.getElementById("macAddress1").value;
+    let macAddress2 = document.getElementById("macAddress2").value;
+    let macAddress3 = document.getElementById("macAddress3").value;
+
+    let topics = {
+        temp: `temp/${macAddress}`,
+        hum: `hum/${macAddress}`,
+        tempPwd: `tempwd/${macAddress}`,
+        humPwd: `humpwd/${macAddress}`,
+        temp1: `temp/${macAddress1}`,
+        hum1: `hum/${macAddress1}`,
+        tempPwd1: `tempwd/${macAddress1}`,
+        humPwd1: `humpwd/${macAddress1}`,
+        temp2: `temp/${macAddress2}`,
+        hum2: `hum/${macAddress2}`,
+        tempPwd2: `tempwd/${macAddress2}`,
+        humPwd2: `humpwd/${macAddress2}`,
+        temp3: `temp/${macAddress3}`,
+        hum3: `hum/${macAddress3}`,
+        tempPwd3: `tempwd/${macAddress3}`,
+        humPwd3: `humpwd/${macAddress3}`
+    };
+
+    const client = mqtt.connect(mqttBroker, {
+        username: mqttUser,
+        password: mqttPassword,
+        protocolVersion: 4,
+        keepalive: 60,
+        reconnectPeriod: 5000,
+    });
+
+    function updateTopics() {
+        macAddress = document.getElementById("macAddress").value;
+        topics.temp = `temp/${macAddress}`;
+        topics.hum = `hum/${macAddress}`;
+        topics.tempPwd = `tempwd/${macAddress}`;
+        topics.humPwd = `humpwd/${macAddress}`;
+        
+        console.log("Updated Topics1:", topics);
+        client.subscribe([topics.temp, topics.hum, topics.tempPwd, topics.humPwd]);
+    }
+
+    function updateTopics1() {
+        macAddress1 = document.getElementById("macAddress1").value;
+        topics.temp1 = `temp/${macAddress1}`;
+        topics.hum1 = `hum/${macAddress1}`;
+        topics.tempPwd1 = `tempwd/${macAddress1}`;
+        topics.humPwd1 = `humpwd/${macAddress1}`;
+        
+        console.log("Updated Topics 2:", topics);
+        client.subscribe([topics.temp1, topics.hum1, topics.tempPwd1, topics.humPwd1]);
+    }
+    function updateTopics2() {
+        macAddress2 = document.getElementById("macAddress2").value;
+        topics.temp2 = `temp/${macAddress2}`;
+        topics.hum2 = `hum/${macAddress2}`;
+        topics.tempPwd2 = `tempwd/${macAddress2}`;
+        topics.humPwd2 = `humpwd/${macAddress2}`;
+        
+        console.log("Updated Topics 3:", topics);
+        client.subscribe([topics.temp2, topics.hum2, topics.tempPwd2, topics.humPwd2]);
+    }
+
+    function updateTopics3() {
+        macAddress3 = document.getElementById("macAddress3").value;
+        topics.temp3 = `temp/${macAddress3}`;
+        topics.hum3 = `hum/${macAddress3}`;
+        topics.tempPwd3 = `tempwd/${macAddress3}`;
+        topics.humPwd3 = `humpwd/${macAddress3}`;
+        
+        console.log("Updated Topics 4:", topics);
+        client.subscribe([topics.temp3, topics.hum3, topics.tempPwd3, topics.humPwd3]);
+    }
+
+    function updateStatus(className, text) {
+        const statusElement = document.getElementById("status");
+        statusElement.className = "status " + className;
+        statusElement.innerText = text;
+    }
+
+    client.on("connect", () => {
+        updateStatus("connected", "Connected");
+        console.log("Connected to MQTT Broker");
+        client.subscribe(Object.values(topics));
+    });
+
+    client.on("message", (topic, message) => {
+        const data = message.toString();
+        console.log(`Received: ${topic} -> ${data}`);
+
+        switch (topic) {
+            case topics.temp: document.getElementById("temp").innerText = data; break;
+            case topics.hum: document.getElementById("hum").innerText = data; break;
+            case topics.tempPwd: document.getElementById("temppwd").innerText = data; break;
+            case topics.humPwd: document.getElementById("humpwd").innerText = data; break;
+            case topics.temp1: document.getElementById("temp1").innerText = data; break;
+            case topics.hum1: document.getElementById("hum1").innerText = data; break;
+            case topics.tempPwd1: document.getElementById("temppwd1").innerText = data; break;
+            case topics.humPwd1: document.getElementById("humpwd1").innerText = data; break;
+            case topics.temp2: document.getElementById("temp2").innerText = data; break;
+            case topics.hum2: document.getElementById("hum2").innerText = data; break;
+            case topics.tempPwd2: document.getElementById("temppwd2").innerText = data; break;
+            case topics.humPwd2: document.getElementById("humpwd2").innerText = data; break;     
+            case topics.temp3: document.getElementById("temp3").innerText = data; break;
+            case topics.hum3: document.getElementById("hum3").innerText = data; break;
+            case topics.tempPwd3: document.getElementById("temppwd3").innerText = data; break;
+            case topics.humPwd3: document.getElementById("humpwd3").innerText = data; break;
+                    const now = new Date();
+        if (topic === topics.temp || topic === topics.hum) {
+            if (topic === topics.temp) {
+                tempData.push(parseFloat(data));
+                // Tetap sinkron waktu dengan kelembapan
+                labels.push(now);
+            } else if (topic === topics.hum) {
+                humData.push(parseFloat(data));
+                // Hanya tambah label kalau belum ada
+                if (labels.length < humData.length) {
+                    labels.push(now);
+                }
+            }
+
+            // Batasi data agar grafik tidak terlalu berat
+            const maxDataPoints = 24;
+            if (labels.length > maxDataPoints) {
+                labels.shift();
+                tempData.shift();
+                humData.shift();
+            }
+
+            tempHumChart.update();
+        }
+   
+        }
+    });
+    
+
+    client.on("error", () => updateStatus("error", "Error!"));
+    client.on("reconnect", () => updateStatus("reconnecting", "Reconnecting..."));
+    client.on("offline", () => updateStatus("offline", "Offline"));
+</script>
+
+</body>
+</html>
