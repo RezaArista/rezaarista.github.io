@@ -211,7 +211,6 @@
             </div>
         </div>
     </div>
-
 <script>
     const mqttBroker = "wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt";
     const mqttUser = "rezaap";
@@ -336,6 +335,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbxTSRqDkd14hrwLSKLSQPmLkLs2NI_BeRttyncm-OyhqXkoYo7zj9-_LA8DjBMRf9NF1g/exec'; // Ganti dengan URL aplikasi web Google Sheet Anda
+    let myChart; // Variabel untuk menyimpan instance grafik
 
     async function fetchDataAndCreateChart() {
         try {
@@ -349,7 +349,11 @@
             const ctx = document.getElementById('myChart').getContext('2d');
 
             // Buat grafik
-            new Chart(ctx, {
+            if (myChart) {
+                myChart.destroy(); // Hancurkan grafik yang ada sebelum membuat yang baru
+            }
+
+            myChart = new Chart(ctx, {
                 type: 'line', // Atau 'bar' atau jenis grafik lain yang Anda inginkan
                 data: {
                     labels: hourlyData.labels,
@@ -383,6 +387,75 @@
         }
     }
 
+    async function updateDashboardData() {
+        try {
+            const response = await fetch(googleSheetUrl);
+            const data = await response.json();
+
+            // Proses data untuk memperbarui nilai instan
+            if (data && data.length > 0) {
+                const latestData = data[data.length - 1]; // Ambil data terbaru
+
+                // Update nilai suhu dan kelembaban di data-box
+                const dataBoxes = document.querySelectorAll('.data-box');
+                dataBoxes.forEach(dataBox => {
+                    const locationElement = dataBox.querySelector('.location');
+                    const locationText = locationElement.textContent.trim();
+
+                    // Temukan MAC Address yang terkait dengan lokasi ini (ini memerlukan mapping atau cara lain)
+                    // Untuk sementara, kita akan menggunakan MAC Address dari input fields
+                    const macInputs = document.querySelectorAll('.config input[type="text"]');
+                    let currentMac = '';
+                    macInputs.forEach(input => {
+                        // Ini adalah pendekatan sederhana dan mungkin perlu disesuaikan
+                        // tergantung bagaimana Anda mencocokkan MAC dengan lokasi di HTML
+                        // Contoh: mencari macAddress yang memiliki dataBox terdekat
+                        if (input.value && (latestData[`temp/${input.value}`] !== undefined || latestData[`hum/${input.value}`] !== undefined)) {
+                            currentMac = input.value;
+                        }
+                    });
+                    
+                    if (currentMac) {
+                         dataBox.querySelector('.temp').innerText = latestData[`temp/${currentMac}`] !== undefined ? latestData[`temp/${currentMac}`] : '--';
+                         dataBox.querySelector('.hum').innerText = latestData[`hum/${currentMac}`] !== undefined ? latestData[`hum/${currentMac}`] : '--';
+                    }
+                });
+            }
+
+            // Perbarui grafik dengan data terbaru
+            const hourlyData = processHourlyData(data); // Proses data historis lagi
+            if (myChart) {
+                myChart.data.labels = hourlyData.labels;
+                myChart.data.datasets = Object.keys(hourlyData.datasets).map(label => ({
+                    label: label,
+                    data: hourlyData.datasets[label],
+                    borderColor: getRandomColor(),
+                    fill: false
+                }));
+                myChart.update(); // Perbarui grafik
+            }
+
+        } catch (error) {
+            console.error('Error fetching or processing data for update:', error);
+        }
+    }
+
+    // Fungsi bantu untuk memetakan MAC Address ke Label Lokasi (Anda perlu melengkapi ini)
+    // Ini adalah contoh sederhana, Anda perlu logika yang lebih robust jika strukturnya kompleks
+    function getLabelFromMacAddress(mac) {
+        const macToLocationMap = {
+            "24:DC:C3:9C:13:9C": "KOS REZA - Wirosari",
+            "E0:5A:1B:A0:14:50": "JAM OFFICE - Wirosari",
+            "24:DC:C3:9C:12:A4": "RUMAH YUSUF - Wirosari",
+            "24:DC:C3:9C:26:B8": "RUMAH REZA - Wirosari",
+            // Tambahkan entri untuk Purwodadi dan Blora dengan MAC Address yang sesuai
+            // "MAC_ADDRESS_PURWODADI_1": "PURWODADI 1",
+            // "MAC_ADDRESS_PURWODADI_2": "PURWODADI 2",
+            // "MAC_ADDRESS_BLORA": "BLORA"
+        };
+        return macToLocationMap[mac] || mac; // Kembalikan label atau MAC jika tidak ditemukan
+    }
+
     function processHourlyData(data) {
         const hourlyAggregated = {};
 
@@ -414,12 +487,19 @@
         const datasets = {};
 
         labels.forEach(label => {
-            for (const sensor in hourlyAggregated[label]) {
-                if (!datasets[sensor]) {
-                    datasets[sensor] = [];
+            for (const sensorKey in hourlyAggregated[label]) { // sensorKey seperti 'temp/MAC_ADDRESS'
+                const parts = sensorKey.split('/');
+                const sensorType = parts[0]; // 'temp' atau 'hum'
+                const mac = parts[1]; // MAC_ADDRESS
+
+                // Dapatkan label yang lebih deskriptif
+                const descriptiveLabel = `${getLabelFromMacAddress(mac)} - ${sensorType.toUpperCase()}`;
+
+                if (!datasets[descriptiveLabel]) {
+                    datasets[descriptiveLabel] = [];
                 }
                 // Hitung rata-rata
-                datasets[sensor].push(hourlyAggregated[label][sensor].sum / hourlyAggregated[label][sensor].count);
+                datasets[descriptiveLabel].push(hourlyAggregated[label][sensorKey].sum / hourlyAggregated[label][sensorKey].count);
             }
              // Isi dengan null jika tidak ada data untuk jam tersebut agar garis grafik terputus
              Object.keys(datasets).forEach(sensor => {
@@ -465,7 +545,9 @@
      }
 
     // Panggil fungsi untuk mengambil data dan membuat grafik saat halaman dimuat
+    // Setelah itu, atur interval untuk update berkala
     fetchDataAndCreateChart();
+    setInterval(updateDashboardData, 5000); // Perbarui setiap 5 detik
 </script>
 
 </body>
