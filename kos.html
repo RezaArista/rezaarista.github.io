@@ -78,7 +78,7 @@
 
         .config {
             margin-top: 20px;
-            display: flex;
+            margin-bottom: 20px;
             flex-direction: column;
             align-items: center;
         }
@@ -109,6 +109,10 @@
         .config button:hover {
             background-color: #218838;
         }
+
+ .mac-container {
+ margin-bottom: 40px; /* Add space between MAC address sections */
+ }
     </style>
 </head>
 <body>
@@ -117,6 +121,8 @@
         <p class="status offline" id="status">Connecting...</p>
 
         <div class="config">
+            <canvas id="myChart" style="margin-top: 30px;"></canvas>
+ <div class="mac-container">
             <label>MAC Address: </label>
             <input type="text" id="macAddress" value="24:DC:C3:9C:13:9C">
             <button onclick="updateTopics()">Set MAC</button>
@@ -137,6 +143,7 @@
                 <p>Humidity: <span id="humpwd" class="hum">--</span> %</p>
             </div>
         </div>
+ </div>
 
         <div class="config">
             <label>MAC Address: </label>
@@ -159,6 +166,7 @@
                 <p>Humidity: <span id="humpwd1" class="hum">--</span> %</p>
             </div>
         </div>
+ <div class="mac-container">
         <div class="config">
             <label>MAC Address: </label>
             <input type="text" id="macAddress2" value="24:DC:C3:9C:12:A4">
@@ -180,6 +188,7 @@
                 <p>Humidity: <span id="humpwd2" class="hum">--</span> %</p>
             </div>
         </div>
+ </div>
 
         <div class="config">
             <label>MAC Address: </label>
@@ -322,6 +331,141 @@
     client.on("error", () => updateStatus("error", "Error!"));
     client.on("reconnect", () => updateStatus("reconnecting", "Reconnecting..."));
     client.on("offline", () => updateStatus("offline", "Offline"));
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbxTSRqDkd14hrwLSKLSQPmLkLs2NI_BeRttyncm-OyhqXkoYo7zj9-_LA8DjBMRf9NF1g/exec'; // Ganti dengan URL aplikasi web Google Sheet Anda
+
+    async function fetchDataAndCreateChart() {
+        try {
+            const response = await fetch(googleSheetUrl);
+            const data = await response.json();
+
+            // Proses data untuk grafik
+            const hourlyData = processHourlyData(data);
+
+            // Ambil konteks canvas
+            const ctx = document.getElementById('myChart').getContext('2d');
+
+            // Buat grafik
+            new Chart(ctx, {
+                type: 'line', // Atau 'bar' atau jenis grafik lain yang Anda inginkan
+                data: {
+                    labels: hourlyData.labels,
+                    datasets: Object.keys(hourlyData.datasets).map(label => ({
+                        label: label,
+                        data: hourlyData.datasets[label],
+                        borderColor: getRandomColor(), // Fungsi bantu untuk warna acak
+                        fill: false
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Waktu (Per Jam)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Nilai Sensor'
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching or processing data:', error);
+        }
+    }
+
+    function processHourlyData(data) {
+        const hourlyAggregated = {};
+
+        data.forEach(row => {
+            const timestamp = new Date(row.time_Stamp);
+            const hour = timestamp.getHours();
+            const hourLabel = `${hour}:00`;
+
+            if (!hourlyAggregated[hourLabel]) {
+                hourlyAggregated[hourLabel] = {};
+            }
+
+            // Anda perlu menyesuaikan ini berdasarkan kolom sensor yang ingin Anda tampilkan
+            // Contoh: mengambil nilai suhu (temp/...) dan kelembaban (hum/...)
+            for (const key in row) {
+                if (key !== 'time_Stamp' && (key.startsWith('temp/') || key.startsWith('hum/'))) {
+                    if (row[key] !== "" && row[key] !== null && row[key] !== undefined) {
+                        if (!hourlyAggregated[hourLabel][key]) {
+                            hourlyAggregated[hourLabel][key] = { sum: 0, count: 0 };
+                        }
+                        hourlyAggregated[hourLabel][key].sum += parseFloat(row[key]);
+                        hourlyAggregated[hourLabel][key].count++;
+                    }
+                }
+            }
+        });
+
+        const labels = Object.keys(hourlyAggregated).sort((a, b) => parseInt(a) - parseInt(b));
+        const datasets = {};
+
+        labels.forEach(label => {
+            for (const sensor in hourlyAggregated[label]) {
+                if (!datasets[sensor]) {
+                    datasets[sensor] = [];
+                }
+                // Hitung rata-rata
+                datasets[sensor].push(hourlyAggregated[label][sensor].sum / hourlyAggregated[label][sensor].count);
+            }
+             // Isi dengan null jika tidak ada data untuk jam tersebut agar garis grafik terputus
+             Object.keys(datasets).forEach(sensor => {
+                if (!hourlyAggregated[label][sensor]) {
+                     // Cari nilai terakhir yang valid jika ada, atau gunakan null
+                     let lastValidValue = null;
+                     for(let i = datasets[sensor].length - 1; i >= 0; i--){
+                         if(datasets[sensor][i] !== null){
+                             lastValidValue = datasets[sensor][i];
+                             break;
+                         }
+                     }
+                     datasets[sensor].push(lastValidValue); // Menggunakan nilai terakhir atau null
+                }
+             });
+        });
+
+        // Pastikan semua dataset memiliki panjang yang sama dengan label
+         Object.keys(datasets).forEach(sensor => {
+            while(datasets[sensor].length < labels.length){
+                 let lastValidValue = null;
+                 for(let i = datasets[sensor].length - 1; i >= 0; i--){
+                     if(datasets[sensor][i] !== null){
+                         lastValidValue = datasets[sensor][i];
+                         break;
+                     }
+                 }
+                 datasets[sensor].push(lastValidValue);
+            }
+         });
+
+        return { labels, datasets };
+    }
+
+     // Fungsi bantu untuk menghasilkan warna acak
+     function getRandomColor() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+     }
+
+    // Panggil fungsi untuk mengambil data dan membuat grafik saat halaman dimuat
+    fetchDataAndCreateChart();
 </script>
 
 </body>
