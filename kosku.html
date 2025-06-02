@@ -216,6 +216,44 @@
     const tempData = [];     // Menyimpan suhu
     const humData = [];      // Menyimpan kelembapan
 
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbxTSRqDkd14hrwLSKLSQPmLkLs2NI_BeRttyncm-OyhqXkoYo7zj9-_LA8DjBMRf9NF1g/exec"; // ganti URL Web App Anda
+    const tempKey = `temp/${macAddress}`;
+    const humKey = `hum/${macAddress}`;
+    
+    // fungsi bantu parsing waktu dari format "dd/mm/yyyy hh:mm:ss"
+    function parseCustomDate(str) {
+      const [date, time] = str.split(" ");
+      const [day, month, year] = date.split("/").map(Number);
+      return new Date(`${year}-${month}-${day}T${time}`);
+    }
+    
+    fetch(SHEET_URL)
+      .then(response => response.json())
+      .then(data => {
+        const labels = [];
+        const tempData = [];
+        const humData = [];
+    
+        data.forEach(entry => {
+          const time = parseCustomDate(entry["time_Stamp"]);
+          const temp = parseFloat(entry[tempKey]);
+          const hum = parseFloat(entry[humKey]);
+    
+          if (!isNaN(temp)) tempData.push({ x: time, y: temp });
+          if (!isNaN(hum)) humData.push({ x: time, y: hum });
+          labels.push(time);
+        });
+    
+        // update grafik
+        tempHumChart.data.labels = labels;
+        tempHumChart.data.datasets[0].data = tempData;
+        tempHumChart.data.datasets[1].data = humData;
+        tempHumChart.update();
+      })
+      .catch(error => {
+        console.error("Gagal ambil data dari Google Sheets:", error);
+      });
+    
     const ctx = document.getElementById('tempHumChart').getContext('2d');
     Chart.register(ChartDataLabels);
     
