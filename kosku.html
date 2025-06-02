@@ -224,12 +224,14 @@
     const tempKey = `temp/${macAddress}`;
     const humKey = `hum/${macAddress}`;
     
-    // fungsi bantu parsing waktu dari format "dd/mm/yyyy hh:mm:ss"
-    function parseCustomDate(str) {
-      const [date, time] = str.split(" ");
-      const [day, month, year] = date.split("/").map(Number);
-      return new Date(`${year}-${month}-${day}T${time}`);
+    function parseCustomDate(dateString) {
+        const parts = dateString.split(/[\s/:]/); // Pisah dengan spasi, slash, titik dua
+        return new Date(
+            `${parts[2]}-${parts[1]}-${parts[0]}T${parts[3]}:${parts[4]}:${parts[5]}`
+        );
     }
+
+
     
     fetch(SHEET_URL)
       .then(response => response.json())
@@ -243,8 +245,15 @@
           const temp = parseFloat(entry[tempKey]);
           const hum = parseFloat(entry[humKey]);
     
-          if (!isNaN(temp)) tempData.push({ x: time, y: temp });
-          if (!isNaN(hum)) humData.push({ x: time, y: hum });
+        if (!isNaN(value) && timestamp instanceof Date && !isNaN(timestamp)) {
+            if (type === "temp") {
+                tempData.push({ x: timestamp, y: value });
+            } else if (type === "hum") {
+                humData.push({ x: timestamp, y: value });
+            }
+        }
+        console.log("Parsed:", type, mac, timestamp, value);
+
           labels.push(time);
         });
     
@@ -285,24 +294,21 @@
         options: {
             responsive: true,
             scales: {
-                x: {
-                    type: 'time',
-                    time: {
-                        unit: 'hour'
+                    x: {
+                        type: 'time',
+                        time: {
+                            tooltipFormat: 'dd/MM/yyyy HH:mm',
+                            unit: 'hour'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Waktu',
+                            color: 'white'
+                        },
+                        ticks: {
+                            color: 'white'
+                        }
                     },
-                    title: {
-                        display: true,
-                        text: 'Waktu'
-                    }
-                },
-                y: {
-                    type: 'linear',
-                    position: 'left',
-                    title: {
-                        display: true,
-                        text: 'Suhu (°C)'
-                    }
-                },
                 y1: {
                     type: 'linear',
                     position: 'right',
