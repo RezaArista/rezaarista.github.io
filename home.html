@@ -293,7 +293,9 @@
             }
         
             // Kirim status baru ke MQTT
-            client.publish(topicStatus, currentStatus, true);
+            //client.publish(topicStatus, currentStatus, true);
+            client.publish(topicStatus, currentStatus, { retain: true });
+
             
             // Hitung mundur pada tombol
             let countdownInterval = setInterval(() => {
