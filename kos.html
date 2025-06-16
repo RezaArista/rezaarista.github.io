@@ -334,6 +334,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    function getRandomDarkColor() {
+        const r = Math.floor(Math.random() * 100);  // 0–99 = gelap
+        const g = Math.floor(Math.random() * 100);
+        const b = Math.floor(Math.random() * 100);
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
     const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbxTSRqDkd14hrwLSKLSQPmLkLs2NI_BeRttyncm-OyhqXkoYo7zj9-_LA8DjBMRf9NF1g/exec'; // Ganti dengan URL aplikasi web Google Sheet Anda
     let myChart; // Variabel untuk menyimpan instance grafik
 
@@ -360,7 +367,7 @@
                     datasets: Object.keys(hourlyData.datasets).map(label => ({
                         label: label,
                         data: hourlyData.datasets[label],
-                        borderColor: getRandomColor(), // Fungsi bantu untuk warna acak
+                        borderColor: getRandomDarkColor(), // Fungsi bantu untuk warna acak
                         fill: false
                     }))
                 },
