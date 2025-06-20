@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MQTT to Google Sheets Logger</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+  <h2>📡 MQTT Logger to Google Sheets</h2>
+  <p><strong>Last Topic:</strong> <span id="mqtt-topic">-</span></p>
+  <p><strong>Last Message:</strong> <span id="mqtt-message">Waiting...</span></p>
+
+  <script>
+    const mqttBroker = "wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt";
+    const mqttUser = "rezaap";
+    const mqttPassword = "Reza123456";
+    const mqttTopic = "#";
+
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxTSRqDkd14hrwLSKLSQPmLkLs2NI_BeRttyncm-OyhqXkoYo7zj9-_LA8DjBMRf9NF1g/exec";
+
+    // Buffer untuk menyimpan data per topik
+    let topicBuffer = {};
+
+    // Connect to MQTT
+    const client = mqtt.connect(mqttBroker, {
+      username: mqttUser,
+      password: mqttPassword,
+      clean: true,
+      connectTimeout: 4000,
+      reconnectPeriod: 4000
+    });
+
+    client.on('connect', () => {
+      console.log("✅ Connected to MQTT broker");
+      client.subscribe(mqttTopic, (err) => {
+        if (!err) {
+          console.log("📶 Subscribed to all topics: #");
+        } else {
+          console.error("❌ Failed to subscribe:", err);
+        }
+      });
+    });
+
+    client.on('message', (topic, message) => {
+      const cleanTopic = topic.trim();
+      const cleanMessage = message.toString().trim();
+
+      topicBuffer[cleanTopic] = cleanMessage;
+
+      document.getElementById("mqtt-topic").textContent = cleanTopic;
+      document.getElementById("mqtt-message").textContent = cleanMessage;
+
+      console.log(`📥 [${cleanTopic}]: ${cleanMessage}`);
+    });
+
+    // Kirim semua topik unik tiap 1 menit
+    setInterval(() => {
+      for (const [topic, message] of Object.entries(topicBuffer)) {
+        sendToGoogleSheets(topic, message);
+      }
+      // Kosongkan buffer setelah dikirim
+      topicBuffer = {};
+    }, 60_000); // tiap 60 detik
+
+    function sendToGoogleSheets(topic, message) {
+      const data = { topic, message };
+
+      fetch(scriptURL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(() => console.log("✅ Sent to Google Sheets:", data))
+      .catch(err => console.error("❌ Failed to send:", err));
+    }
+  </script>
+</body>
+</html>
