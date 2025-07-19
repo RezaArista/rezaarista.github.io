@@ -198,7 +198,7 @@
         <div class="data-section">
             <!-- Wirosari -->
             <div class="data-box">
-                <div class="location"><i class="fas fa-map-marker-alt"></i>RUMAH REZA</div>
+                <div class="location"><i class="fas fa-map-marker-alt"></i>KAMAR REZA</div>
                 <p>Temperature: <span id="temp3" class="temp">--</span> °C</p>
                 <p>Humidity: <span id="hum3" class="hum">--</span> %</p>
             </div>
@@ -210,7 +210,34 @@
                 <p>Humidity: <span id="humpwd3" class="hum">--</span> %</p>
             </div>
         </div>
+
+        <div class="config">
+            <label>MAC Address: </label>
+            <input type="text" id="macAddress4" value="54:43:B2:C1:97:3C">
+            <button onclick="updateTopics4()">Set MAC</button>
+        </div>
+        <div class="data-section">
+            <!-- Wirosari -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>RUMAH REZA</div>
+                <p>Temperature: <span id="temp4" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="hum4" class="hum">--</span> %</p>
+            </div>
+    
+            <!-- BLORa -->
+            <div class="data-box">
+                <div class="location"><i class="fas fa-map-marker-alt"></i>BLORA</div>
+                <p>Temperature: <span id="temppwd4" class="temp">--</span> °C</p>
+                <p>Humidity: <span id="humpwd4" class="hum">--</span> %</p>
+            </div>
+        </div>
+
+
+
     </div>
+
+   
+</div>
 <script>
     const mqttBroker = "wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt";
     const mqttUser = "rezaap";
@@ -220,6 +247,7 @@
     let macAddress1 = document.getElementById("macAddress1").value;
     let macAddress2 = document.getElementById("macAddress2").value;
     let macAddress3 = document.getElementById("macAddress3").value;
+    let macAddress4 = document.getElementById("macAddress4").value;
 
     let topics = {
         temp: `temp/${macAddress}`,
@@ -237,7 +265,11 @@
         temp3: `temp/${macAddress3}`,
         hum3: `hum/${macAddress3}`,
         tempPwd3: `tempwd/${macAddress3}`,
-        humPwd3: `humpwd/${macAddress3}`
+        humPwd3: `humpwd/${macAddress3}`,
+        temp4: `temp/${macAddress4}`,
+        hum4: `hum/${macAddress4}`,
+        tempPwd4: `tempwd/${macAddress4}`,
+        humPwd4: `humpwd/${macAddress4}`
     };
 
     const client = mqtt.connect(mqttBroker, {
@@ -291,6 +323,17 @@
         client.subscribe([topics.temp3, topics.hum3, topics.tempPwd3, topics.humPwd3]);
     }
 
+    function updateTopics4() {
+        macAddress4 = document.getElementById("macAddress4").value;
+        topics.temp4 = `temp/${macAddress4}`;
+        topics.hum4 = `hum/${macAddress4}`;
+        topics.tempPwd4 = `tempwd/${macAddress4}`;
+        topics.humPwd4 = `humpwd/${macAddress4}`;
+        
+        console.log("Updated Topics 5:", topics);
+        client.subscribe([topics.temp4, topics.hum4, topics.tempPwd4, topics.humPwd4]);
+    }
+
     function updateStatus(className, text) {
         const statusElement = document.getElementById("status");
         statusElement.className = "status " + className;
@@ -323,7 +366,11 @@
             case topics.temp3: document.getElementById("temp3").innerText = data; break;
             case topics.hum3: document.getElementById("hum3").innerText = data; break;
             case topics.tempPwd3: document.getElementById("temppwd3").innerText = data; break;
-            case topics.humPwd3: document.getElementById("humpwd3").innerText = data; break;   
+            case topics.humPwd3: document.getElementById("humpwd3").innerText = data; break;
+            case topics.temp4: document.getElementById("temp4").innerText = data; break;
+            case topics.hum4: document.getElementById("hum4").innerText = data; break;
+            case topics.tempPwd4: document.getElementById("temppwd4").innerText = data; break;
+            case topics.humPwd4: document.getElementById("humpwd4").innerText = data; break;    
         }
     });
 
@@ -455,6 +502,7 @@
             "E0:5A:1B:A0:14:50": "JAM OFFICE - Wirosari",
             "24:DC:C3:9C:12:A4": "RUMAH YUSUF - Wirosari",
             "24:DC:C3:9C:26:B8": "RUMAH REZA - Blora",
+            "54:43:B2:C1:97:3C": "RUMAH REZA - Blora"
             // Tambahkan entri untuk Purwodadi dan Blora dengan MAC Address yang sesuai
             // "MAC_ADDRESS_PURWODADI_1": "PURWODADI 1",
             // "MAC_ADDRESS_PURWODADI_2": "PURWODADI 2",
