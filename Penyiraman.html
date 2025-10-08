@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🌱 Dashboard Pompa IoT</title>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: 'Segoe UI', Arial; background:#f4f7f9; margin:0; padding:20px; text-align:center;}
+h1 { color:#2c3e50; }
+.box { background:white; padding:20px; margin:10px; border-radius:15px; display:inline-block; min-width:200px; box-shadow:0 4px 8px rgba(0,0,0,0.1);}
+.on { color:green; font-weight:bold; font-size:1.2em;}
+.off { color:red; font-weight:bold; font-size:1.2em;}
+button { padding:10px 20px; margin:5px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
+button.on { background:green; color:white; }
+button.off { background:red; color:white; }
+input { padding:5px; width:80px; border-radius:5px; border:1px solid #ccc; text-align:center; }
+#chartContainer { width:90%; max-width:700px; margin:20px auto;}
+</style>
+</head>
+<body>
+
+<h1>🌱 Dashboard IoT Pompa</h1>
+
+<div class="box">
+  Soil Moisture:<br><b id="soil">--</b>
+</div>
+<div class="box">
+  Pompa Status:<br><b id="pump" class="off">--</b><br>
+  <button class="on" onclick="setPump('ON')">Nyalakan</button>
+  <button class="off" onclick="setPump('OFF')">Matikan</button>
+</div>
+<div class="box">
+  Jadwal 1:<br><input id="jadwal1Input" type="time" value="06:00">
+  <button onclick="setJadwal(1)">Update</button><br>
+  <span id="jadwal1">--</span>
+</div>
+<div class="box">
+  Jadwal 2:<br><input id="jadwal2Input" type="time" value="18:00">
+  <button onclick="setJadwal(2)">Update</button><br>
+  <span id="jadwal2">--</span>
+</div>
+<div class="box">
+  Waktu:<br><span id="waktu">--:--:--</span>
+</div>
+
+<div id="chartContainer">
+  <canvas id="soilChart"></canvas>
+</div>
+
+<script>
+// ---- Konfigurasi MQTT ----
+const broker = "wss://cec6834af4594d7b9687f68dafb48b42.s1.eu.hivemq.cloud:8884/mqtt"; // WebSocket TLS port
+const options = {
+  clientId: "webclient_" + Math.random().toString(16).substr(2, 8),
+  username: "Pompa1",
+  password: "Pompa1234",
+  clean: true,
+  reconnectPeriod: 2000
+};
+
+const client = mqtt.connect(broker, options);
+
+
+// ---- Topik MQTT ----
+const topicSoil = "iot/pompa/soil";
+const topicPump = "iot/pompa/status";
+const topicPumpControl = "iot/pompa/control";
+const topicJadwal1 = "iot/pompa/jadwal1";
+const topicJadwal2 = "iot/pompa/jadwal2";
+const topicJadwal1Set = "iot/pompa/jadwal1/set";
+const topicJadwal2Set = "iot/pompa/jadwal2/set";
+
+// ---- Chart Soil Moisture ----
+const ctx = document.getElementById('soilChart').getContext('2d');
+const soilChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'Soil Moisture',
+            data: [],
+            borderColor: '#2ecc71',
+            backgroundColor: 'rgba(46, 204, 113,0.2)',
+            fill: true,
+            tension: 0.3
+        }]
+    },
+    options: {
+        responsive:true,
+        animation: {duration:0},
+        scales: {
+            y: { min: 0, max: 1023 }
+        }
+    }
+});
+
+// ---- MQTT Connection ----
+document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+
+client.on("connect", () => {
+    console.log("✅ Connected to HiveMQ Cloud via WebSocket");
+    document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+    client.subscribe([topicSoil, topicPump, topicJadwal1, topicJadwal2]);
+});
+
+
+// ---- KONFIG TELEGRAM ----
+const telegramBotToken = "8042018408:AAGvmNQ06gkfS4UvtslD5Xq4GC26aWEDFPk";
+const chatId = "717555942";
+
+function sendTelegramNotif(message) {
+    const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: message })
+    })
+    .then(res => console.log("✅ Telegram notification sent"))
+    .catch(err => console.error("❌ Telegram notification failed", err));
+}
+
+// ---- Update MQTT message handler ----
+let lastPumpStatus = null; // menampung status terakhir ON/OFF
+
+client.on("message", (topic, message) => {
+    const msg = message.toString();
+    const now = new Date();
+    const waktu = now.toLocaleTimeString();
+    document.getElementById("waktu").innerText = waktu;
+
+    // ---- Update Soil Moisture ----
+    if(topic === topicSoil){
+        document.getElementById("soil").innerText = msg;
+        soilChart.data.labels.push(waktu);
+        soilChart.data.datasets[0].data.push(parseInt(msg));
+        if(soilChart.data.labels.length > 20){
+            soilChart.data.labels.shift();
+            soilChart.data.datasets[0].data.shift();
+        }
+        soilChart.update();
+    }
+
+    // ---- Update Pompa Status dan Telegram Notif ----
+    if(topic === topicPump){
+        const pumpEl = document.getElementById("pump");
+        const status = msg.includes("ON") ? "ON" : "OFF";
+        pumpEl.innerText = status;
+        pumpEl.className = status === "ON" ? "on" : "off";
+
+        // ---- Kirim notif TELEGRAM hanya jika status berubah ----
+        if(status !== lastPumpStatus){
+            lastPumpStatus = status; // update status terakhir
+            if(status === "ON"){
+                sendTelegramNotif(`💧 Pompa dinyalakan pada ${waktu}`);
+            } else {
+                sendTelegramNotif(`💤 Pompa dimatikan pada ${waktu}`);
+            }
+        }
+    }
+
+    // ---- Update Jadwal 1 ----
+    if(topic === topicJadwal1){
+        document.getElementById("jadwal1").innerText = msg;
+        document.getElementById("jadwal1Input").value = msg;
+    }
+
+    // ---- Update Jadwal 2 ----
+    if(topic === topicJadwal2){
+        document.getElementById("jadwal2").innerText = msg;
+        document.getElementById("jadwal2Input").value = msg;
+    }
+});
+
+
+
+client.on("error", (err) => {
+    console.error("❌ MQTT Error", err);
+});
+
+// ---- Fungsi Kontrol Pompa ----
+function setPump(state){
+    client.publish(topicPumpControl, state, {retain:true, qos:1});
+    console.log("Sent pump control:", state);
+
+    // Update tampilan langsung
+    const pumpEl = document.getElementById("pump");
+    pumpEl.innerText = state;
+    pumpEl.className = state === "ON" ? "on" : "off";
+}
+
+
+// ---- Fungsi Update Jadwal ----
+function setJadwal(num){
+    let value;
+    let topic;
+    if(num===1){
+        value = document.getElementById("jadwal1Input").value;
+        topic = topicJadwal1Set;
+    } else {
+        value = document.getElementById("jadwal2Input").value;
+        topic = topicJadwal2Set;
+    }
+    client.publish(topic, value, {retain:true});
+    console.log(`Updated jadwal${num}:`, value);
+}
+</script>
+</body>
+</html>
