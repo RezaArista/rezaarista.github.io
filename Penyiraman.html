@@ -49,8 +49,7 @@ input { padding:5px; width:80px; border-radius:5px; border:1px solid #ccc; text-
 </div>
 
 <script>
-// ---- Konfigurasi MQTT ----
-const broker = "wss://cec6834af4594d7b9687f68dafb48b42.s1.eu.hivemq.cloud:8884/mqtt"; // WebSocket TLS port
+const broker = "wss://cec6834af4594d7b9687f68dafb48b42.s1.eu.hivemq.cloud:8884/mqtt";
 const options = {
   clientId: "webclient_" + Math.random().toString(16).substr(2, 8),
   username: "Pompa1",
@@ -58,11 +57,8 @@ const options = {
   clean: true,
   reconnectPeriod: 2000
 };
-
 const client = mqtt.connect(broker, options);
 
-
-// ---- Topik MQTT ----
 const topicSoil = "iot/pompa/soil";
 const topicPump = "iot/pompa/status";
 const topicPumpControl = "iot/pompa/control";
@@ -71,172 +67,133 @@ const topicJadwal2 = "iot/pompa/jadwal2";
 const topicJadwal1Set = "iot/pompa/jadwal1/set";
 const topicJadwal2Set = "iot/pompa/jadwal2/set";
 
-// ---- Chart Soil Moisture ----
+// Chart
 const ctx = document.getElementById('soilChart').getContext('2d');
 const soilChart = new Chart(ctx, {
     type: 'line',
-    data: {
-        labels: [],
-        datasets: [{
-            label: 'Soil Moisture',
-            data: [],
-            borderColor: '#2ecc71',
-            backgroundColor: 'rgba(46, 204, 113,0.2)',
-            fill: true,
-            tension: 0.3
-        }]
+    data: { 
+        labels: [], 
+        datasets: [{ 
+            label: 'Soil Moisture', 
+            data: [], 
+            borderColor: '#2ecc71', 
+            backgroundColor: 'rgba(46, 204, 113,0.2)', 
+            fill: true, 
+            tension: 0.3 
+        }] 
     },
-    options: {
-        responsive:true,
-        animation: {duration:0},
-        scales: {
-            y: { min: 0, max: 1023 }
-        }
+    options: { 
+        responsive:true, 
+        animation: {duration:0}, 
+        scales: { y: { min: 0, max: 5000 } } 
     }
 });
 
-// ---- MQTT Connection ----
-document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbzia5jifJ9H05AeDUUjs2so983uTe8LpEFm8ddQGHLkJq1Ttizsgp4fIuvJgKH-suH2sw/exec';
 
-client.on("connect", () => {
-    console.log("✅ Connected to HiveMQ Cloud via WebSocket");
-    document.querySelectorAll('button').forEach(btn => btn.disabled = false);
-    client.subscribe([topicSoil, topicPump, topicJadwal1, topicJadwal2]);
-});
-
-
-// ---- KONFIG TELEGRAM ----
-const telegramBotToken = "8042018408:AAGvmNQ06gkfS4UvtslD5Xq4GC26aWEDFPk";
-const chatId = "717555942";
-
-function sendTelegramNotif(message) {
-    const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
-    fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: message })
-    })
-    .then(res => console.log("✅ Telegram notification sent"))
-    .catch(err => console.error("❌ Telegram notification failed", err));
+async function fetchSheetData() {
+    try {
+        const res = await fetch(googleSheetUrl);
+        return await res.json();
+    } catch (err) {
+        console.error("❌ Gagal ambil data dari Sheet", err);
+        return [];
+    }
 }
 
+// === Bagian Chart ===
+async function updateDashboard() {
+    const data = await fetchSheetData();
+    if(data.length === 0) return;
 
-// ---- Ambil data dari Google Sheet (Apps Script) ----
-async function loadSheetData() {
-  const scriptURL = "https://script.google.com/macros/s/AKfycbzia5jifJ9H05AeDUUjs2so983uTe8LpEFm8ddQGHLkJq1Ttizsgp4fIuvJgKH-suH2sw/exec";
-  const url = `https://corsproxy.io/?${encodeURIComponent(scriptURL)}`;
-
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    console.log("✅ Data dari Sheet dimuat:", data.length, "baris");
-
-    const times = [];
-    const values = [];
-    data.forEach(row => {
-      times.push(row.time_Stamp);
-      values.push(Number(row["iot/pompa/soil"] || 0));
+    // ===== Group data per jam =====
+    const grouped = {};
+    data.forEach(d => {
+        const t = new Date(d.time_Stamp);
+        const hour = t.getHours();
+        if(!grouped[hour]) grouped[hour] = [];
+        grouped[hour].push(Number(d[topicSoil] || 0));
     });
 
-    soilChart.data.labels = times;
+    const hours = Object.keys(grouped).sort((a,b)=>a-b);
+    const values = hours.map(h => {
+        const arr = grouped[h];
+        const avg = arr.reduce((sum,v)=>sum+v,0)/arr.length;
+        return Math.round(avg);
+    });
+
+    // Update chart per jam
+    soilChart.data.labels = hours.map(h => h + ":00");
     soilChart.data.datasets[0].data = values;
     soilChart.update();
 
-  } catch (err) {
-    console.error("❌ Gagal ambil data dari Sheet", err);
-  }
+    // Update latest value realtime
+    const latest = data[data.length-1];
+    document.getElementById("soil").innerText = latest[topicSoil] || '--';
+    document.getElementById("waktu").innerText = new Date().toLocaleTimeString();
 }
 
-
-// Panggil saat awal
-loadSheetData();
-
-
-// ---- Update MQTT message handler ----
-let lastPumpStatus = null; // menampung status terakhir ON/OFF
+// MQTT Handlers
+client.on("connect", () => {
+    console.log("✅ Connected to MQTT Broker");
+    client.subscribe([topicSoil, topicPump, topicJadwal1, topicJadwal2]);
+});
 
 client.on("message", (topic, message) => {
     const msg = message.toString();
     const now = new Date();
-    const waktu = now.toLocaleTimeString();
-    document.getElementById("waktu").innerText = waktu;
+    document.getElementById("waktu").innerText = now.toLocaleTimeString();
 
-    // ---- Update Soil Moisture ----
     if(topic === topicSoil){
-        document.getElementById("soil").innerText = msg;
-        soilChart.data.labels.push(waktu);
-        soilChart.data.datasets[0].data.push(parseInt(msg));
-        if(soilChart.data.labels.length > 20){
+        const now = new Date();
+    if(now.getMinutes() === 0 && now.getSeconds() < 5){ // hanya saat awal jam
+        soilChart.data.labels.push(now.getHours() + ":00");
+        soilChart.data.datasets[0].data.push(parseInt(message.toString()));
+        if(soilChart.data.labels.length > 24){
             soilChart.data.labels.shift();
             soilChart.data.datasets[0].data.shift();
         }
         soilChart.update();
+        }
     }
 
-    // ---- Update Pompa Status dan Telegram Notif ----
     if(topic === topicPump){
         const pumpEl = document.getElementById("pump");
         const status = msg.includes("ON") ? "ON" : "OFF";
         pumpEl.innerText = status;
-        pumpEl.className = status === "ON" ? "on" : "off";
-
-        // ---- Kirim notif TELEGRAM hanya jika status berubah ----
-        if(status !== lastPumpStatus){
-            lastPumpStatus = status; // update status terakhir
-            if(status === "ON"){
-                sendTelegramNotif(`💧 Pompa dinyalakan pada ${waktu}`);
-            } else {
-                sendTelegramNotif(`💤 Pompa dimatikan pada ${waktu}`);
-            }
-        }
+        pumpEl.className = status==="ON"?"on":"off";
     }
 
-    // ---- Update Jadwal 1 ----
     if(topic === topicJadwal1){
         document.getElementById("jadwal1").innerText = msg;
         document.getElementById("jadwal1Input").value = msg;
     }
 
-    // ---- Update Jadwal 2 ----
     if(topic === topicJadwal2){
         document.getElementById("jadwal2").innerText = msg;
         document.getElementById("jadwal2Input").value = msg;
     }
 });
 
+client.on("error", (err) => console.error("❌ MQTT Error", err));
 
-
-client.on("error", (err) => {
-    console.error("❌ MQTT Error", err);
-});
-
-// ---- Fungsi Kontrol Pompa ----
 function setPump(state){
     client.publish(topicPumpControl, state, {retain:true, qos:1});
-    console.log("Sent pump control:", state);
-
-    // Update tampilan langsung
     const pumpEl = document.getElementById("pump");
     pumpEl.innerText = state;
-    pumpEl.className = state === "ON" ? "on" : "off";
+    pumpEl.className = state==="ON"?"on":"off";
 }
 
-
-// ---- Fungsi Update Jadwal ----
 function setJadwal(num){
-    let value;
-    let topic;
-    if(num===1){
-        value = document.getElementById("jadwal1Input").value;
-        topic = topicJadwal1Set;
-    } else {
-        value = document.getElementById("jadwal2Input").value;
-        topic = topicJadwal2Set;
-    }
+    const value = document.getElementById(`jadwal${num}Input`).value;
+    const topic = num===1 ? topicJadwal1Set : topicJadwal2Set;
     client.publish(topic, value, {retain:true});
-    console.log(`Updated jadwal${num}:`, value);
 }
+
+// Refresh Sheet tiap 15 detik
+updateDashboard();
+setInterval(updateDashboard, 15000);
+
 </script>
 </body>
 </html>
-
