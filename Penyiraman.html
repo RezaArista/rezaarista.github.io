@@ -120,6 +120,34 @@ function sendTelegramNotif(message) {
     .catch(err => console.error("❌ Telegram notification failed", err));
 }
 
+
+// ---- Ambil data dari Google Sheet (Apps Script) ----
+async function loadSheetData() {
+    const url = "https://script.google.com/macros/s/AKfycbzia5jifJ9H05AeDUUjs2so983uTe8LpEFm8ddQGHLkJq1Ttizsgp4fIuvJgKH-suH2sw/exec";
+    try {
+        const res = await fetch(url);
+        const data = await res.json(); // pastikan Apps Script return JSON
+        const times = [];
+        const values = [];
+
+        data.forEach(row => {
+            times.push(row[0]);   // kolom waktu
+            values.push(Number(row[2])); // kolom nilai
+        });
+
+        soilChart.data.labels = times;
+        soilChart.data.datasets[0].data = values;
+        soilChart.update();
+        console.log("✅ Data dari Sheet dimuat:", data.length, "baris");
+    } catch (err) {
+        console.error("❌ Gagal ambil data dari Sheet", err);
+    }
+}
+
+// Panggil saat awal
+loadSheetData();
+
+
 // ---- Update MQTT message handler ----
 let lastPumpStatus = null; // menampung status terakhir ON/OFF
 
