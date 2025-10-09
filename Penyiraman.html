@@ -159,10 +159,22 @@ client.on("message", (topic, message) => {
 
     if(topic === topicPump){
         const pumpEl = document.getElementById("pump");
-        const status = msg.includes("ON") ? "ON" : "OFF";
-        pumpEl.innerText = status;
-        pumpEl.className = status==="ON"?"on":"off";
+
+        if (msg === "ON") {
+            pumpEl.innerText = "MENYALA";
+            pumpEl.className = "on";
+        } else if (msg === "OFF") {
+            pumpEl.innerText = "MATI";
+            pumpEl.className = "off";
+        } else if (msg.includes("TERJADWAL")) {
+            pumpEl.innerText = "⏰ " + msg; // tampil: ⏰ PENYIRAMAN TERJADWAL
+            pumpEl.className = "on";
+        } else {
+            pumpEl.innerText = msg;
+            pumpEl.className = "off";
+        }
     }
+
 
     if(topic === topicJadwal1){
         document.getElementById("jadwal1").innerText = msg;
