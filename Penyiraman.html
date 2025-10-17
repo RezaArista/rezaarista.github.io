@@ -15,31 +15,126 @@ button { padding:10px 20px; margin:5px; border:none; border-radius:8px; cursor:p
 button.on { background:green; color:white; }
 button.off { background:red; color:white; }
 input { padding:5px; width:80px; border-radius:5px; border:1px solid #ccc; text-align:center; }
+input[type="number"] { width:60px; }
 #chartContainer { width:90%; max-width:700px; margin:20px auto;}
+.water-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 20px auto;
+  background: #ddd;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+}
+.water {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(to top, #3498db, #5dade2);
+  transition: height 1s ease-in-out, background 0.5s;
+  border-top-left-radius: 50%;
+  border-top-right-radius: 50%;
+  overflow: hidden;
+}
+.wave {
+  position: absolute;
+  top: -10px;
+  width: 200%;
+  height: 20px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 100%;
+  animation: wave 2s infinite linear;
+}
+@keyframes wave {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.water-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #2c3e50;
+  font-weight: bold;
+  font-size: 1.2em;
+}
 </style>
 </head>
 <body>
 
 <h1>🌱 Dashboard IoT Pompa</h1>
 
-<div class="box">
-  Soil Moisture:<br><b id="soil">--</b>
+<div style="display:flex; justify-content:center; flex-wrap:wrap; gap:4px;">
+  <!-- Soil Moisture -->
+  <div class="water-container" id="soilContainer">
+    <div class="water" id="soilWater"><div class="wave"></div></div>
+    <div class="water-text">
+      <div id="soilStatus" style="font-size:0.9em; color:gray;">🔄 Checking...</div>
+      Soil Moisture<br><b id="soil">--%</b>
+    </div>
+  </div>
+
+  <!-- Water Level -->
+  <div class="water-container" id="waterContainer">
+    <div class="water" id="waterLevel"><div class="wave"></div></div>
+    <div class="water-text">
+      <div id="waterStatus" style="font-size:0.9em; color:gray;">🔄 Checking...</div>
+      Water Level<br><b id="water">--%</b>
+    </div>
+  </div>
 </div>
+
+
+
 <div class="box">
   Pompa Status:<br><b id="pump" class="off">--</b><br>
   <button class="on" onclick="setPump('ON')">Nyalakan</button>
   <button class="off" onclick="setPump('OFF')">Matikan</button>
 </div>
+
+<!-- Jadwal 1 -->
 <div class="box">
-  Jadwal 1:<br><input id="jadwal1Input" type="time" value="06:00">
+  Jadwal 1:<br>
+  <input id="jadwal1Input" type="time" value="06:00">
+  <input id="durasi1" type="number" value="10" min="1" max="300"> dtk<br>
+  <label><input type="checkbox" id="enable1" onchange="toggleEnable(1)"> Aktifkan</label><br>
   <button onclick="setJadwal(1)">Update</button><br>
   <span id="jadwal1">--</span>
 </div>
+
+<!-- Jadwal 2 -->
 <div class="box">
-  Jadwal 2:<br><input id="jadwal2Input" type="time" value="18:00">
+  Jadwal 2:<br>
+  <input id="jadwal2Input" type="time" value="18:00">
+  <input id="durasi2" type="number" value="10" min="1" max="300"> dtk<br>
+  <label><input type="checkbox" id="enable2" onchange="toggleEnable(2)"> Aktifkan</label><br>
   <button onclick="setJadwal(2)">Update</button><br>
   <span id="jadwal2">--</span>
 </div>
+
+<!-- Jadwal 3 -->
+<div class="box">
+  Jadwal 3:<br>
+  <input id="jadwal3Input" type="time" value="09:00">
+  <input id="durasi3" type="number" value="10" min="1" max="300"> dtk<br>
+  <label><input type="checkbox" id="enable3" onchange="toggleEnable(3)"> Aktifkan</label><br>
+  <button onclick="setJadwal(3)">Update</button><br>
+  <span id="jadwal3">--</span>
+</div>
+
+<!-- Jadwal 4 -->
+<div class="box">
+  Jadwal 4:<br>
+  <input id="jadwal4Input" type="time" value="15:00">
+  <input id="durasi4" type="number" value="10" min="1" max="300"> dtk<br>
+  <label><input type="checkbox" id="enable4" onchange="toggleEnable(4)"> Aktifkan</label><br>
+  <button onclick="setJadwal(4)">Update</button><br>
+  <span id="jadwal4">--</span>
+</div>
+
 <div class="box">
   Waktu:<br><span id="waktu">--:--:--</span>
 </div>
@@ -59,15 +154,27 @@ const options = {
 };
 const client = mqtt.connect(broker, options);
 
+// ===== Topic MQTT =====
+const topicWater = "iot/pompa/water";
 const topicSoil = "iot/pompa/soil";
 const topicPump = "iot/pompa/status";
 const topicPumpControl = "iot/pompa/control";
 const topicJadwal1 = "iot/pompa/jadwal1";
 const topicJadwal2 = "iot/pompa/jadwal2";
+const topicJadwal3 = "iot/pompa/jadwal3";
+const topicJadwal4 = "iot/pompa/jadwal4";
 const topicJadwal1Set = "iot/pompa/jadwal1/set";
 const topicJadwal2Set = "iot/pompa/jadwal2/set";
+const topicJadwal3Set = "iot/pompa/jadwal3/set";
+const topicJadwal4Set = "iot/pompa/jadwal4/set";
 
-// Chart
+// === Tambahan: topic enable jadwal ===
+const topicEnable1 = "iot/pompa/jadwal1/enable";
+const topicEnable2 = "iot/pompa/jadwal2/enable";
+const topicEnable3 = "iot/pompa/jadwal3/enable";
+const topicEnable4 = "iot/pompa/jadwal4/enable";
+
+// ===== Chart Soil Moisture =====
 const ctx = document.getElementById('soilChart').getContext('2d');
 const soilChart = new Chart(ctx, {
     type: 'line',
@@ -101,12 +208,11 @@ async function fetchSheetData() {
     }
 }
 
-// === Bagian Chart ===
+
 async function updateDashboard() {
     const data = await fetchSheetData();
     if(data.length === 0) return;
 
-    // ===== Group data per jam =====
     const grouped = {};
     data.forEach(d => {
         const t = new Date(d.time_Stamp);
@@ -122,21 +228,24 @@ async function updateDashboard() {
         return Math.round(avg);
     });
 
-    // Update chart per jam
     soilChart.data.labels = hours.map(h => h + ":00");
     soilChart.data.datasets[0].data = values;
     soilChart.update();
 
-    // Update latest value realtime
     const latest = data[data.length-1];
     document.getElementById("soil").innerText = latest[topicSoil] || '--';
     document.getElementById("waktu").innerText = new Date().toLocaleTimeString();
 }
 
-// MQTT Handlers
+// ===== MQTT Handling =====
 client.on("connect", () => {
     console.log("✅ Connected to MQTT Broker");
-    client.subscribe([topicSoil, topicPump, topicJadwal1, topicJadwal2]);
+    client.subscribe([
+      topicSoil, topicWater ,topicPump,
+      topicJadwal1, topicJadwal2,
+      topicJadwal3, topicJadwal4,
+      topicEnable1, topicEnable2, topicEnable3, topicEnable4
+    ]);
 });
 
 client.on("message", (topic, message) => {
@@ -145,67 +254,174 @@ client.on("message", (topic, message) => {
     document.getElementById("waktu").innerText = now.toLocaleTimeString();
 
     if(topic === topicSoil){
-        const now = new Date();
-    if(now.getMinutes() === 0 && now.getSeconds() < 5){ // hanya saat awal jam
-        soilChart.data.labels.push(now.getHours() + ":00");
-        soilChart.data.datasets[0].data.push(parseInt(message.toString()));
-        if(soilChart.data.labels.length > 24){
-            soilChart.data.labels.shift();
-            soilChart.data.datasets[0].data.shift();
-        }
-        soilChart.update();
-        }
+      markSoilReceived();
+      const value = msg.trim();
+      const numValue = parseInt(value);
+      if (!isNaN(numValue)) updateWaterLevel(numValue);
+      if(now.getMinutes() === 0 && now.getSeconds() < 5){
+          soilChart.data.labels.push(now.getHours() + ":00");
+          soilChart.data.datasets[0].data.push(value);
+          if(soilChart.data.labels.length > 24){
+              soilChart.data.labels.shift();
+              soilChart.data.datasets[0].data.shift();
+          }
+          soilChart.update();
+      }
     }
+
+    if(topic === topicWater){
+      markWaterReceived();
+      const value = parseInt(msg);
+      updateTankLevel(value);
+    }
+
 
     if(topic === topicPump){
         const pumpEl = document.getElementById("pump");
-
-        if (msg === "ON") {
-            pumpEl.innerText = "MENYALA";
-            pumpEl.className = "on";
-        } else if (msg === "OFF") {
-            pumpEl.innerText = "MATI";
-            pumpEl.className = "off";
-        } else if (msg.includes("TERJADWAL")) {
-            pumpEl.innerText = "⏰ " + msg; // tampil: ⏰ PENYIRAMAN TERJADWAL
-            pumpEl.className = "on";
-        } else {
-            pumpEl.innerText = msg;
-            pumpEl.className = "off";
-        }
+        if (msg === "ON") { pumpEl.innerText="MENYALA"; pumpEl.className="on";}
+        else if (msg === "OFF"){ pumpEl.innerText="MATI"; pumpEl.className="off";}
+        else if (msg.includes("TERJADWAL_")){ pumpEl.innerText="⏰ "+msg; pumpEl.className="on";}
     }
 
+    if(topic === topicJadwal1){ document.getElementById("jadwal1").innerText = msg; }
+    if(topic === topicJadwal2){ document.getElementById("jadwal2").innerText = msg; }
+    if(topic === topicJadwal3){ document.getElementById("jadwal3").innerText = msg; }
+    if(topic === topicJadwal4){ document.getElementById("jadwal4").innerText = msg; }
 
-    if(topic === topicJadwal1){
-        document.getElementById("jadwal1").innerText = msg;
-        document.getElementById("jadwal1Input").value = msg;
-    }
-
-    if(topic === topicJadwal2){
-        document.getElementById("jadwal2").innerText = msg;
-        document.getElementById("jadwal2Input").value = msg;
-    }
+    // === Sinkronisasi checkbox dari MQTT ===
+    if(topic === topicEnable1){ document.getElementById("enable1").checked = (msg==="ON"); }
+    if(topic === topicEnable2){ document.getElementById("enable2").checked = (msg==="ON"); }
+    if(topic === topicEnable3){ document.getElementById("enable3").checked = (msg==="ON"); }
+    if(topic === topicEnable4){ document.getElementById("enable4").checked = (msg==="ON"); }
 });
 
-client.on("error", (err) => console.error("❌ MQTT Error", err));
+function updateWaterLevel(value){
+  const soilDiv = document.getElementById("soilWater");
+  const soilText = document.getElementById("soil");
+
+  let percent = parseInt(String(value).trim());
+  if (isNaN(percent) || percent < 0) percent = 0;
+  if (percent > 100) percent = 100;
+
+  soilDiv.style.height = percent + "%";
+  soilDiv.style.background = (percent <= 50)
+    ? "linear-gradient(to top,#e74c3c,#ff6b6b)"
+    : "linear-gradient(to top,#3498db,#5dade2)";
+  
+  soilText.innerText = percent + "%"; // selalu tampil %
+  soilText.style.color = "black";
+}
+
+function updateTankLevel(value){
+  const waterDiv = document.getElementById("waterLevel");
+  const waterText = document.getElementById("water");
+
+  let percent = parseInt(String(value).trim());
+  if (isNaN(percent) || percent < 0) percent = 0;
+  if (percent > 100) percent = 100;
+
+  waterDiv.style.height = percent + "%";
+  waterDiv.style.background = (percent <= 50)
+    ? "linear-gradient(to top,#e67e22,#f39c12)"
+    : "linear-gradient(to top,#1abc9c,#16a085)";
+
+  waterText.innerText = percent + "%"; // selalu tampil %
+  waterText.style.color = "black";
+}
+
+
+
 
 function setPump(state){
-    client.publish(topicPumpControl, state, {retain:true, qos:1});
-    const pumpEl = document.getElementById("pump");
-    pumpEl.innerText = state;
-    pumpEl.className = state==="ON"?"on":"off";
+  client.publish(topicPumpControl,state,{retain:true,qos:1});
+  const pumpEl=document.getElementById("pump");
+  pumpEl.innerText=state;
+  pumpEl.className=state==="ON"?"on":"off";
 }
 
 function setJadwal(num){
-    const value = document.getElementById(`jadwal${num}Input`).value;
-    const topic = num===1 ? topicJadwal1Set : topicJadwal2Set;
-    client.publish(topic, value, {retain:true});
+  const jam=document.getElementById(`jadwal${num}Input`).value;
+  const dur=document.getElementById(`durasi${num}`).value;
+  const payload=`${jam}:${dur}`;
+  const topic=eval(`topicJadwal${num}Set`);
+  client.publish(topic,payload,{retain:true});
+  document.getElementById(`jadwal${num}`).innerText=payload;
 }
 
-// Refresh Sheet tiap 15 detik
-updateDashboard();
-setInterval(updateDashboard, 15000);
+// === Fungsi baru: aktif/nonaktif jadwal ===
+function toggleEnable(num){
+  const enabled=document.getElementById(`enable${num}`).checked;
+  const topic=eval(`topicEnable${num}`);
+  const value=enabled?"ON":"OFF";
+  client.publish(topic,value,{retain:true});
+  console.log(`🔘 Jadwal ${num} ${value}`);
+}
 
+// ======= Watchdog Soil Moisture (5 menit tanpa data) =======
+let lastSoilUpdate = Date.now();
+let soilOffline = false;
+
+// Dipanggil tiap kali ada data soil
+function markSoilReceived() {
+  lastSoilUpdate = Date.now();
+  if (soilOffline) {
+    soilOffline = false;
+  }
+  document.getElementById("soilStatus").innerText = "🟢 ONLINE";
+  document.getElementById("soilStatus").style.color = "green";
+}
+
+setInterval(() => {
+  const elapsed = Date.now() - lastSoilUpdate;
+  if (elapsed > 300000 && !soilOffline) { // >5 menit
+    soilOffline = true;
+    document.getElementById("soilStatus").innerText = "🔴 OFFLINE";
+    document.getElementById("soilStatus").style.color = "red";
+    document.getElementById("soil").innerText = "--";
+    document.querySelector(".water").style.height = "0%";
+    document.querySelector(".water").style.background = "gray";
+  }
+}, 30000);
+
+
+// Cek tiap 30 detik apakah data hilang
+setInterval(() => {
+  const elapsed = Date.now() - lastSoilUpdate;
+  if (elapsed > 300000 && !soilOffline) { // >5 menit
+    soilOffline = true;
+    document.getElementById("soil").innerText = "OFFLINE";
+    document.getElementById("soil").style.color = "red";
+    document.querySelector(".water").style.height = "0%";
+    document.querySelector(".water").style.background = "gray";
+  }
+}, 30000);
+
+let lastWaterUpdate = Date.now();
+let waterOffline = false;
+
+function markWaterReceived() {
+  lastWaterUpdate = Date.now();
+  if (waterOffline) waterOffline = false;
+  document.getElementById("waterStatus").innerText = "🟢 ONLINE";
+  document.getElementById("waterStatus").style.color = "green";
+}
+
+setInterval(() => {
+  const elapsed = Date.now() - lastWaterUpdate;
+  if (elapsed > 300000 && !waterOffline) { // 5 menit
+    waterOffline = true;
+    document.getElementById("waterStatus").innerText = "🔴 OFFLINE";
+    document.getElementById("waterStatus").style.color = "red";
+    document.getElementById("water").innerText = "--";
+    document.getElementById("waterLevel").style.height = "0%";
+    document.getElementById("waterLevel").style.background = "gray";
+  }
+}, 30000);
+
+
+
+updateDashboard();
+setInterval(updateDashboard,15000);
 </script>
 </body>
 </html>
