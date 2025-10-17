@@ -208,6 +208,7 @@ async function fetchSheetData() {
     }
 }
 
+let realtimeSoilValue = null; // nilai terakhir dari MQTT
 
 async function updateDashboard() {
     const data = await fetchSheetData();
@@ -232,8 +233,15 @@ async function updateDashboard() {
     soilChart.data.datasets[0].data = values;
     soilChart.update();
 
-    const latest = data[data.length-1];
-    document.getElementById("soil").innerText = latest[topicSoil] || '--';
+    // Gunakan nilai MQTT jika tersedia
+    if (realtimeSoilValue === null) {
+      const latest = data[data.length-1];
+      let val = parseInt(latest[topicSoil]);
+      if (isNaN(val)) val = 0;
+      document.getElementById("soil").innerText = val + "%";
+    }
+
+
     document.getElementById("waktu").innerText = new Date().toLocaleTimeString();
 }
 
@@ -254,10 +262,13 @@ client.on("message", (topic, message) => {
     document.getElementById("waktu").innerText = now.toLocaleTimeString();
 
     if(topic === topicSoil){
-      markSoilReceived();
-      const value = msg.trim();
-      const numValue = parseInt(value);
-      if (!isNaN(numValue)) updateWaterLevel(numValue);
+        markSoilReceived();
+        const value = msg.trim();
+        const numValue = parseInt(value);
+        if (!isNaN(numValue)) {
+          realtimeSoilValue = numValue; // simpan realtime
+          updateSoilLevel(numValue);
+        }
       if(now.getMinutes() === 0 && now.getSeconds() < 5){
           soilChart.data.labels.push(now.getHours() + ":00");
           soilChart.data.datasets[0].data.push(value);
@@ -295,7 +306,7 @@ client.on("message", (topic, message) => {
     if(topic === topicEnable4){ document.getElementById("enable4").checked = (msg==="ON"); }
 });
 
-function updateWaterLevel(value){
+function updateSoilLevel(value){
   const soilDiv = document.getElementById("soilWater");
   const soilText = document.getElementById("soil");
 
@@ -303,14 +314,16 @@ function updateWaterLevel(value){
   if (isNaN(percent) || percent < 0) percent = 0;
   if (percent > 100) percent = 100;
 
+  // animasi tinggi dan warna
   soilDiv.style.height = percent + "%";
   soilDiv.style.background = (percent <= 50)
-    ? "linear-gradient(to top,#e74c3c,#ff6b6b)"
-    : "linear-gradient(to top,#3498db,#5dade2)";
-  
-  soilText.innerText = percent + "%"; // selalu tampil %
+    ? "linear-gradient(to top,#e74c3c,#ff6b6b)"   // merah jika kering
+    : "linear-gradient(to top,#3498db,#5dade2)";  // biru jika lembap
+
+  soilText.innerText = percent + "%";
   soilText.style.color = "black";
 }
+
 
 function updateTankLevel(value){
   const waterDiv = document.getElementById("waterLevel");
@@ -378,23 +391,11 @@ setInterval(() => {
     document.getElementById("soilStatus").innerText = "🔴 OFFLINE";
     document.getElementById("soilStatus").style.color = "red";
     document.getElementById("soil").innerText = "--";
-    document.querySelector(".water").style.height = "0%";
+    document.getElementById("soilWater").style.height = "0%";
     document.querySelector(".water").style.background = "gray";
   }
 }, 30000);
 
-
-// Cek tiap 30 detik apakah data hilang
-setInterval(() => {
-  const elapsed = Date.now() - lastSoilUpdate;
-  if (elapsed > 300000 && !soilOffline) { // >5 menit
-    soilOffline = true;
-    document.getElementById("soil").innerText = "OFFLINE";
-    document.getElementById("soil").style.color = "red";
-    document.querySelector(".water").style.height = "0%";
-    document.querySelector(".water").style.background = "gray";
-  }
-}, 30000);
 
 let lastWaterUpdate = Date.now();
 let waterOffline = false;
