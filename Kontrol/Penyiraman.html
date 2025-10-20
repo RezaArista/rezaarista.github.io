@@ -197,7 +197,6 @@ const soilChart = new Chart(ctx, {
 });
 
 const googleSheetUrl = 'https://script.google.com/macros/s/AKfycbzia5jifJ9H05AeDUUjs2so983uTe8LpEFm8ddQGHLkJq1Ttizsgp4fIuvJgKH-suH2sw/exec';
-const riwayatSheet = 'https://script.google.com/macros/s/AKfycbwC_JDDKJXeI7YmhPtfqHKVbL9DiEtbrIYHhyIKEJxpt5aEhkhgXvu_9m9yLLRuYTENAA/exec';
 
 async function fetchSheetData() {
     try {
@@ -245,24 +244,6 @@ async function updateDashboard() {
 
     document.getElementById("waktu").innerText = new Date().toLocaleTimeString();
 }
-
-// === Fungsi kirim log ke Google Sheet ===
-async function logToSheet(topic, message) {
-  try {
-    const payload = { topic, message };
-    await fetch(riwayatSheet, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      mode: "cors"
-    });
-    console.log("📝 Log terkirim ke Sheet:", topic, message);
-  } catch (err) {
-    console.error("❌ Gagal kirim log ke Sheet:", err);
-  }
-}
-
-
 
 // ===== MQTT Handling =====
 client.on("connect", () => {
@@ -369,9 +350,6 @@ function setPump(state){
   const pumpEl=document.getElementById("pump");
   pumpEl.innerText=state;
   pumpEl.className=state==="ON"?"on":"off";
-
-    // kirim log ke Sheet
-  logToSheet("Pompa", "Pompa diubah ke " + state);  
 }
 
 function setJadwal(num){
@@ -381,9 +359,6 @@ function setJadwal(num){
   const topic=eval(`topicJadwal${num}Set`);
   client.publish(topic,payload,{retain:true});
   document.getElementById(`jadwal${num}`).innerText=payload;
-
-    // kirim log ke Sheet
-  logToSheet(`Jadwal${num}`, `Jadwal ${num} diubah: ${payload}`);
 }
 
 // === Fungsi baru: aktif/nonaktif jadwal ===
@@ -393,9 +368,6 @@ function toggleEnable(num){
   const value=enabled?"ON":"OFF";
   client.publish(topic,value,{retain:true});
   console.log(`🔘 Jadwal ${num} ${value}`);
- 
-    // kirim log ke Sheet
-  logToSheet(`Jadwal${num}/Enable`, `Status jadwal ${num}: ${value}`);  
 }
 
 // ======= Watchdog Soil Moisture (5 menit tanpa data) =======
@@ -454,3 +426,4 @@ setInterval(updateDashboard,15000);
 </script>
 </body>
 </html>
+
