@@ -252,13 +252,15 @@ async function logToSheet(topic, message) {
     await fetch(googleSheetUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      mode: "cors"
     });
     console.log("📝 Log terkirim ke Sheet:", topic, message);
   } catch (err) {
     console.error("❌ Gagal kirim log ke Sheet:", err);
   }
 }
+
 
 
 // ===== MQTT Handling =====
