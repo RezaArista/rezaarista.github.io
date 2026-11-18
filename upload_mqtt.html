@@ -10,17 +10,19 @@
   <p><strong>Last Message:</strong> <span id="mqtt-message">Waiting...</span></p>
 
   <script>
+    // --- KONFIGURASI MQTT ---
     const mqttBroker = "wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt";
     const mqttUser = "rezaap";
     const mqttPassword = "Reza123456";
-    const mqttTopic = "#";
+    const mqttTopic = "#"; // Mendengarkan semua topik
 
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxTSRqDkd14hrwLSKLSQPmLkLs2NI_BeRttyncm-OyhqXkoYo7zj9-_LA8DjBMRf9NF1g/exec";
+    // --- URL GOOGLE APPS SCRIPT BARU ANDA ---
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxFT3GjHK87dZ9TFO0wgxF2NvGoc_2h9kihrmeP8qvXTHM7vqXRijzzUrSVH1wpUPzJpA/exec";
 
-    // Buffer untuk menyimpan data per topik
+    // Buffer untuk menyimpan data per topik (mencegah spam request)
     let topicBuffer = {};
 
-    // Connect to MQTT
+    // Connect ke MQTT Broker
     const client = mqtt.connect(mqttBroker, {
       username: mqttUser,
       password: mqttPassword,
@@ -44,33 +46,48 @@
       const cleanTopic = topic.trim();
       const cleanMessage = message.toString().trim();
 
+      // Simpan ke buffer (hanya menyimpan pesan terakhir per topik)
       topicBuffer[cleanTopic] = cleanMessage;
 
+      // Tampilkan di UI
       document.getElementById("mqtt-topic").textContent = cleanTopic;
       document.getElementById("mqtt-message").textContent = cleanMessage;
 
       console.log(`📥 [${cleanTopic}]: ${cleanMessage}`);
     });
 
-    // Kirim semua topik unik tiap 1 menit
+    // Kirim semua data dari buffer ke Google Sheets setiap 1 menit
     setInterval(() => {
+      const keys = Object.keys(topicBuffer);
+      if (keys.length === 0) {
+        console.log("⏳ Tidak ada data baru dari MQTT, menunggu...");
+        return;
+      }
+
+      console.log(`🚀 Mengirim ${keys.length} topik ke Google Sheets...`);
+      
       for (const [topic, message] of Object.entries(topicBuffer)) {
         sendToGoogleSheets(topic, message);
       }
-      // Kosongkan buffer setelah dikirim
+      
+      // Kosongkan buffer setelah dikirim agar tidak mengirim data yang sama berulang-ulang
       topicBuffer = {};
-    }, 60_000); // tiap 60 detik
+    }, 60_000); // 60.000 ms = 1 menit
 
     function sendToGoogleSheets(topic, message) {
       const data = { topic, message };
 
       fetch(scriptURL, {
         method: "POST",
-        mode: "no-cors",
+        mode: "no-cors", // Wajib no-cors karena Google Apps Script tidak mengirim header CORS
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       })
-      .then(() => console.log("✅ Sent to Google Sheets:", data))
+      .then(() => {
+        // Karena mode: no-cors, kita tidak bisa membaca respon aslinya. 
+        // Tapi jika tidak error, berarti request terkirim.
+        console.log(`✅ Sent to Google Sheets -> [${topic}]: ${message}`);
+      })
       .catch(err => console.error("❌ Failed to send:", err));
     }
   </script>
