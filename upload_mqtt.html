@@ -5,8 +5,10 @@
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-    .box { border: 1px solid #cbd5e1; border-radius: 10px; padding: 15px; margin-bottom: 15px; max-width: 600px; }
+    .box { border: 1px solid #cbd5e1; border-radius: 10px; padding: 15px; margin-bottom: 15px; max-width: 650px; }
     .status { font-weight: bold; }
+    button { padding: 8px 14px; background: #4f46e5; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #4338ca; }
   </style>
 </head>
 <body>
@@ -14,7 +16,7 @@
 
   <!-- Status Broker 1: Sensor -->
   <div class="box">
-    <h3>1. Broker Sensor</h3>
+    <h3>1. Broker Sensor (1b1abc47...)</h3>
     <p><strong>Status:</strong> <span id="status-sensor" class="status">Connecting...</span></p>
     <p><strong>Last Topic:</strong> <span id="topic-sensor">-</span></p>
     <p><strong>Last Message:</strong> <span id="msg-sensor">Waiting...</span></p>
@@ -22,21 +24,21 @@
 
   <!-- Status Broker 2: CCTV -->
   <div class="box">
-    <h3>2. Broker CCTV (camera)</h3>
+    <h3>2. Broker CCTV (cec6834a... | user: camera)</h3>
     <p><strong>Status:</strong> <span id="status-cctv" class="status">Connecting...</span></p>
     <p><strong>Last Topic:</strong> <span id="topic-cctv">-</span></p>
     <p><strong>Last Message:</strong> <span id="msg-cctv">Waiting...</span></p>
+    <button onclick="kirimTesCCTV()">🧪 Kirim Tes Status CCTV ke Sheet2</button>
   </div>
 
   <script>
     // --- URL GOOGLE APPS SCRIPT ---
     const scriptURL = "https://script.google.com/macros/s/AKfycbxFT3GjHK87dZ9TFO0wgxF2NvGoc_2h9kihrmeP8qvXTHM7vqXRijzzUrSVH1wpUPzJpA/exec";
 
-    // Buffer gabungan untuk menyimpan data per topik (mencegah spam request)
     let topicBuffer = {};
 
     // =========================================================
-    // 1. KONFIGURASI BROKER SENSOR (LAMA)
+    // 1. BROKER SENSOR
     // =========================================================
     const clientSensor = mqtt.connect("wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt", {
       username: "rezaap",
@@ -49,14 +51,17 @@
     clientSensor.on('connect', () => {
       document.getElementById("status-sensor").textContent = "✅ Connected";
       clientSensor.subscribe("#");
+      console.log("✅ Connected to Broker SENSOR");
     });
     clientSensor.on('offline', () => document.getElementById("status-sensor").textContent = "❌ Offline");
-    clientSensor.on('error', () => document.getElementById("status-sensor").textContent = "⚠️ Error");
+    clientSensor.on('error', (err) => {
+      document.getElementById("status-sensor").textContent = "⚠️ Error";
+      console.error("❌ Sensor MQTT Error:", err);
+    });
 
     clientSensor.on('message', (topic, message) => {
       const cleanTopic = topic.trim();
       const cleanMessage = message.toString().trim();
-
       topicBuffer[cleanTopic] = cleanMessage;
       document.getElementById("topic-sensor").textContent = cleanTopic;
       document.getElementById("msg-sensor").textContent = cleanMessage;
@@ -64,7 +69,7 @@
     });
 
     // =========================================================
-    // 2. KONFIGURASI BROKER CCTV (BARU - Port WebSocket 8884)
+    // 2. BROKER CCTV (cec6834af4594d7b9687f68dafb48b42)
     // =========================================================
     const clientCCTV = mqtt.connect("wss://cec6834af4594d7b9687f68dafb48b42.s1.eu.hivemq.cloud:8884/mqtt", {
       username: "camera",
@@ -76,37 +81,44 @@
 
     clientCCTV.on('connect', () => {
       document.getElementById("status-cctv").textContent = "✅ Connected";
-      clientCCTV.subscribe("#");
+      clientCCTV.subscribe("#", (err) => {
+        if (!err) console.log("✅ Connected & Subscribed (#) to Broker CCTV");
+        else console.error("❌ Failed subscribe CCTV:", err);
+      });
     });
     clientCCTV.on('offline', () => document.getElementById("status-cctv").textContent = "❌ Offline");
-    clientCCTV.on('error', () => document.getElementById("status-cctv").textContent = "⚠️ Error");
+    clientCCTV.on('error', (err) => {
+      document.getElementById("status-cctv").textContent = "⚠️ Error: " + err.message;
+      console.error("❌ CCTV MQTT Error:", err);
+    });
 
     clientCCTV.on('message', (topic, message) => {
       const cleanTopic = topic.trim();
       const cleanMessage = message.toString().trim();
 
-      topicBuffer[cleanTopic] = cleanMessage;
       document.getElementById("topic-cctv").textContent = cleanTopic;
       document.getElementById("msg-cctv").textContent = cleanMessage;
       console.log(`📥 [CCTV][${cleanTopic}]: ${cleanMessage}`);
+
+      // Jika topik Status/..., langsung kirim ke Sheet2 tanpa tunggu 1 menit
+      if (cleanTopic.indexOf("Status/") === 0) {
+        sendToGoogleSheets(cleanTopic, cleanMessage);
+      } else {
+        topicBuffer[cleanTopic] = cleanMessage;
+      }
     });
 
     // =========================================================
-    // 3. KIRIM SEMUA BUFFER KE GOOGLE SHEETS SETIAP 1 MENIT
+    // 3. KIRIM BUFFER SENSOR SETIAP 1 MENIT
     // =========================================================
     setInterval(() => {
       const keys = Object.keys(topicBuffer);
-      if (keys.length === 0) {
-        console.log("⏳ Tidak ada data baru dari MQTT, menunggu...");
-        return;
-      }
+      if (keys.length === 0) return;
 
       console.log(`🚀 Mengirim ${keys.length} topik ke Google Sheets...`);
-      
       for (const [topic, message] of Object.entries(topicBuffer)) {
         sendToGoogleSheets(topic, message);
       }
-      
       topicBuffer = {};
     }, 60_000);
 
@@ -119,6 +131,28 @@
       })
       .then(() => console.log(`✅ Sent to Google Sheets -> [${topic}]: ${message}`))
       .catch(err => console.error("❌ Failed to send:", err));
+    }
+
+    // =========================================================
+    // 4. TOMBOL TES MANUAL KE BROKER CCTV
+    // =========================================================
+    function kirimTesCCTV() {
+      const testTopic = "Status/CCTV_Test";
+      const testPayload = JSON.stringify({
+        nama: "CCTV Test",
+        ip: "192.168.1.99",
+        status: "on",
+        resolusi: "VGA",
+        fps: 15,
+        timestamp: new Date().toISOString()
+      });
+
+      if (clientCCTV.connected) {
+        clientCCTV.publish(testTopic, testPayload);
+        console.log("📤 Published tes ke broker CCTV:", testTopic);
+      } else {
+        alert("Broker CCTV belum connected! Cek status koneksi di atas.");
+      }
     }
   </script>
 </body>
