@@ -1,62 +1,99 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>MQTT to Google Sheets Logger</title>
+  <title>MQTT to Google Sheets Logger (Dual Broker)</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+    .box { border: 1px solid #cbd5e1; border-radius: 10px; padding: 15px; margin-bottom: 15px; max-width: 600px; }
+    .status { font-weight: bold; }
+  </style>
 </head>
 <body>
-  <h2>📡 MQTT Logger to Google Sheets</h2>
-  <p><strong>Last Topic:</strong> <span id="mqtt-topic">-</span></p>
-  <p><strong>Last Message:</strong> <span id="mqtt-message">Waiting...</span></p>
+  <h2>📡 MQTT Logger to Google Sheets (Sensor + CCTV)</h2>
+
+  <!-- Status Broker 1: Sensor -->
+  <div class="box">
+    <h3>1. Broker Sensor</h3>
+    <p><strong>Status:</strong> <span id="status-sensor" class="status">Connecting...</span></p>
+    <p><strong>Last Topic:</strong> <span id="topic-sensor">-</span></p>
+    <p><strong>Last Message:</strong> <span id="msg-sensor">Waiting...</span></p>
+  </div>
+
+  <!-- Status Broker 2: CCTV -->
+  <div class="box">
+    <h3>2. Broker CCTV (camera)</h3>
+    <p><strong>Status:</strong> <span id="status-cctv" class="status">Connecting...</span></p>
+    <p><strong>Last Topic:</strong> <span id="topic-cctv">-</span></p>
+    <p><strong>Last Message:</strong> <span id="msg-cctv">Waiting...</span></p>
+  </div>
 
   <script>
-    // --- KONFIGURASI MQTT ---
-    const mqttBroker = "wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt";
-    const mqttUser = "rezaap";
-    const mqttPassword = "Reza123456";
-    const mqttTopic = "#"; // Mendengarkan semua topik
-
-    // --- URL GOOGLE APPS SCRIPT BARU ANDA ---
+    // --- URL GOOGLE APPS SCRIPT ---
     const scriptURL = "https://script.google.com/macros/s/AKfycbxFT3GjHK87dZ9TFO0wgxF2NvGoc_2h9kihrmeP8qvXTHM7vqXRijzzUrSVH1wpUPzJpA/exec";
 
-    // Buffer untuk menyimpan data per topik (mencegah spam request)
+    // Buffer gabungan untuk menyimpan data per topik (mencegah spam request)
     let topicBuffer = {};
 
-    // Connect ke MQTT Broker
-    const client = mqtt.connect(mqttBroker, {
-      username: mqttUser,
-      password: mqttPassword,
+    // =========================================================
+    // 1. KONFIGURASI BROKER SENSOR (LAMA)
+    // =========================================================
+    const clientSensor = mqtt.connect("wss://1b1abc472a014a47a1cebe302164235c.s1.eu.hivemq.cloud:8884/mqtt", {
+      username: "rezaap",
+      password: "Reza123456",
       clean: true,
       connectTimeout: 4000,
       reconnectPeriod: 4000
     });
 
-    client.on('connect', () => {
-      console.log("✅ Connected to MQTT broker");
-      client.subscribe(mqttTopic, (err) => {
-        if (!err) {
-          console.log("📶 Subscribed to all topics: #");
-        } else {
-          console.error("❌ Failed to subscribe:", err);
-        }
-      });
+    clientSensor.on('connect', () => {
+      document.getElementById("status-sensor").textContent = "✅ Connected";
+      clientSensor.subscribe("#");
     });
+    clientSensor.on('offline', () => document.getElementById("status-sensor").textContent = "❌ Offline");
+    clientSensor.on('error', () => document.getElementById("status-sensor").textContent = "⚠️ Error");
 
-    client.on('message', (topic, message) => {
+    clientSensor.on('message', (topic, message) => {
       const cleanTopic = topic.trim();
       const cleanMessage = message.toString().trim();
 
-      // Simpan ke buffer (hanya menyimpan pesan terakhir per topik)
       topicBuffer[cleanTopic] = cleanMessage;
-
-      // Tampilkan di UI
-      document.getElementById("mqtt-topic").textContent = cleanTopic;
-      document.getElementById("mqtt-message").textContent = cleanMessage;
-
-      console.log(`📥 [${cleanTopic}]: ${cleanMessage}`);
+      document.getElementById("topic-sensor").textContent = cleanTopic;
+      document.getElementById("msg-sensor").textContent = cleanMessage;
+      console.log(`📥 [SENSOR][${cleanTopic}]: ${cleanMessage}`);
     });
 
-    // Kirim semua data dari buffer ke Google Sheets setiap 1 menit
+    // =========================================================
+    // 2. KONFIGURASI BROKER CCTV (BARU - Port WebSocket 8884)
+    // =========================================================
+    const clientCCTV = mqtt.connect("wss://cec6834af4594d7b9687f68dafb48b42.s1.eu.hivemq.cloud:8884/mqtt", {
+      username: "camera",
+      password: "camera123",
+      clean: true,
+      connectTimeout: 4000,
+      reconnectPeriod: 4000
+    });
+
+    clientCCTV.on('connect', () => {
+      document.getElementById("status-cctv").textContent = "✅ Connected";
+      clientCCTV.subscribe("#");
+    });
+    clientCCTV.on('offline', () => document.getElementById("status-cctv").textContent = "❌ Offline");
+    clientCCTV.on('error', () => document.getElementById("status-cctv").textContent = "⚠️ Error");
+
+    clientCCTV.on('message', (topic, message) => {
+      const cleanTopic = topic.trim();
+      const cleanMessage = message.toString().trim();
+
+      topicBuffer[cleanTopic] = cleanMessage;
+      document.getElementById("topic-cctv").textContent = cleanTopic;
+      document.getElementById("msg-cctv").textContent = cleanMessage;
+      console.log(`📥 [CCTV][${cleanTopic}]: ${cleanMessage}`);
+    });
+
+    // =========================================================
+    // 3. KIRIM SEMUA BUFFER KE GOOGLE SHEETS SETIAP 1 MENIT
+    // =========================================================
     setInterval(() => {
       const keys = Object.keys(topicBuffer);
       if (keys.length === 0) {
@@ -70,24 +107,17 @@
         sendToGoogleSheets(topic, message);
       }
       
-      // Kosongkan buffer setelah dikirim agar tidak mengirim data yang sama berulang-ulang
       topicBuffer = {};
-    }, 60_000); // 60.000 ms = 1 menit
+    }, 60_000);
 
     function sendToGoogleSheets(topic, message) {
-      const data = { topic, message };
-
       fetch(scriptURL, {
         method: "POST",
-        mode: "no-cors", // Wajib no-cors karena Google Apps Script tidak mengirim header CORS
+        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ topic, message })
       })
-      .then(() => {
-        // Karena mode: no-cors, kita tidak bisa membaca respon aslinya. 
-        // Tapi jika tidak error, berarti request terkirim.
-        console.log(`✅ Sent to Google Sheets -> [${topic}]: ${message}`);
-      })
+      .then(() => console.log(`✅ Sent to Google Sheets -> [${topic}]: ${message}`))
       .catch(err => console.error("❌ Failed to send:", err));
     }
   </script>
