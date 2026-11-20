@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reza Arista Pratama - Portofolio</title>
+  <title>Reza Arista Pratama - IoT Engineer & Developer</title>
 
   <!--
 - favicon
@@ -23,6 +23,192 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!--
+- custom enhancement & icon fix styles
+  -->
+  <style>
+    /* Perbaikan ukuran icon pada Sorotan Kompetensi agar tidak menutupi teks */
+    .testimonials-avatar-box {
+      width: 65px !important;
+      height: 65px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 14px !important;
+    }
+
+    .testimonials-avatar-box img {
+      width: 36px !important;
+      height: 36px !important;
+      object-fit: contain !important;
+    }
+
+    .modal-avatar-box {
+      width: 75px !important;
+      height: 75px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 16px !important;
+    }
+
+    .modal-avatar-box img {
+      width: 42px !important;
+      height: 42px !important;
+      object-fit: contain !important;
+    }
+
+    /* Ringkasan Statistik */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: var(--border-gradient-onyx);
+      padding: 18px 15px;
+      border-radius: 14px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      box-shadow: var(--shadow-2);
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      background: var(--bg-gradient-jet);
+      border-radius: inherit;
+      z-index: -1;
+    }
+
+    .stat-number {
+      color: var(--orange-yellow-crayola);
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      color: var(--light-gray);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    /* Detail & Tag Teknologi Portofolio */
+    .project-desc {
+      color: var(--light-gray-70);
+      font-size: 12.5px;
+      line-height: 1.5;
+      margin-top: 6px;
+      padding: 0 10px;
+    }
+
+    .tech-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 0 10px 6px;
+    }
+
+    .tech-tag {
+      background: hsla(45, 100%, 72%, 0.12);
+      color: var(--orange-yellow-crayola);
+      border: 1px solid hsla(45, 100%, 72%, 0.25);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+
+    /* Kartu Kontak Cepat (Pengganti Form Kirim Pesan) */
+    .availability-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: hsla(142, 70%, 45%, 0.1);
+      border: 1px solid hsla(142, 70%, 45%, 0.3);
+      margin-bottom: 22px;
+      color: var(--white-2);
+      font-size: 13px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      flex-shrink: 0;
+    }
+
+    .quick-contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+      margin-top: 15px;
+    }
+
+    .quick-contact-card {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 18px;
+      border-radius: 14px;
+      background: var(--border-gradient-onyx);
+      position: relative;
+      z-index: 1;
+      box-shadow: var(--shadow-2);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .quick-contact-card::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      background: var(--bg-gradient-jet);
+      border-radius: inherit;
+      z-index: -1;
+    }
+
+    .quick-contact-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-3);
+    }
+
+    .quick-contact-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: var(--onyx);
+      color: var(--orange-yellow-crayola);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .quick-contact-info h4 {
+      color: var(--white-2);
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 3px;
+    }
+
+    .quick-contact-info p {
+      color: var(--light-gray-70);
+      font-size: 12px;
+      word-break: break-word;
+    }
+  </style>
 </head>
 
 <body>
@@ -86,9 +272,9 @@
             </div>
 
             <div class="contact-info">
-              <p class="contact-title">Telp / WhatsApp</p>
+              <p class="contact-title">WhatsApp / Telp</p>
 
-              <a href="tel:+6285179967500" class="contact-link">+62 851 7996 7500</a>
+              <a href="https://wa.me/6285179967500" target="_blank" class="contact-link">+62 851 7996 7500</a>
             </div>
 
           </li>
@@ -114,7 +300,7 @@
             </div>
 
             <div class="contact-info">
-              <p class="contact-title">Alamat</p>
+              <p class="contact-title">Domisili</p>
 
               <address>Kota Blora, Jawa Tengah, Indonesia</address>
             </div>
@@ -134,8 +320,8 @@
           </li>
 
           <li class="social-item">
-            <a href="https://www.facebook.com/rezaarista.pratama" target="_blank" class="social-link" title="Facebook">
-              <ion-icon name="logo-facebook"></ion-icon>
+            <a href="https://wa.me/6285179967500" target="_blank" class="social-link" title="WhatsApp">
+              <ion-icon name="logo-whatsapp"></ion-icon>
             </a>
           </li>
 
@@ -146,7 +332,13 @@
           </li>
 
           <li class="social-item">
-            <a href="https://rezaarista.my.canva.site" target="_blank" class="social-link" title="Website Portofolio">
+            <a href="https://www.facebook.com/rezaarista.pratama" target="_blank" class="social-link" title="Facebook">
+              <ion-icon name="logo-facebook"></ion-icon>
+            </a>
+          </li>
+
+          <li class="social-item">
+            <a href="https://rezaarista.my.canva.site" target="_blank" class="social-link" title="Portofolio Canva">
               <ion-icon name="globe-outline"></ion-icon>
             </a>
           </li>
@@ -217,10 +409,26 @@
           </p>
 
           <p>
-            Saat ini berfokus pada pengembangan dan integrasi sistem Industrial IoT di lingkungan manufaktur, meliputi 
-            akuisisi data sensor industri, komunikasi protokol MQTT & REST API, integrasi PLC/HMI/SCADA, hingga 
-            pemeliharaan perangkat keras dan server berbasis Linux (Debian).
+            Saat ini aktif merancang dan memelihara solusi Industrial IoT di lingkungan manufaktur—mulai dari akuisisi data 
+            sensor warehouse & mesin produksi, integrasi barcode scanner & timbangan digital, komunikasi protokol MQTT & REST API, 
+            hingga integrasi PLC/HMI/SCADA berbasis Linux (Debian).
           </p>
+        </section>
+
+        <!-- Ringkasan Statistik Singkat -->
+        <section class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">3+ Tahun</div>
+            <div class="stat-label">Pengalaman Industrial IoT & Software</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">6+ Sistem</div>
+            <div class="stat-label">Proyek IoT, Otomasi & Dashboard Aktif</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">IPK 3.81</div>
+            <div class="stat-label">Cumlaude S1 Teknik Informatika (3.5 Th)</div>
+          </div>
         </section>
 
 
@@ -230,7 +438,7 @@
 
         <section class="service">
 
-          <h3 class="h3 service-title">Bidang Keahlian</h3>
+          <h3 class="h3 service-title">Fokus & Layanan Teknis</h3>
 
           <ul class="service-list">
 
@@ -244,7 +452,7 @@
                 <h4 class="h4 service-item-title">Embedded & IoT Firmware</h4>
 
                 <p class="service-item-text">
-                  Pengembangan firmware C++ dan Python untuk ESP32, Arduino, dan Raspberry Pi dengan integrasi sensor & aktuator.
+                  Perancangan firmware C++ dan Python pada ESP32, Arduino, serta Raspberry Pi untuk akuisisi multi-sensor & kontrol aktuator presisi.
                 </p>
               </div>
 
@@ -257,10 +465,10 @@
               </div>
 
               <div class="service-content-box">
-                <h4 class="h4 service-item-title">IoT Dashboard & Web Dev</h4>
+                <h4 class="h4 service-item-title">Real-Time Web Dashboard</h4>
 
                 <p class="service-item-text">
-                  Pembuatan dashboard monitoring web interaktif menggunakan Python, JavaScript, PHP, dan REST API / MQTT.
+                  Pembuatan dashboard pemantauan jarak jauh berbasis Web, Python, JavaScript, dan PHP yang terhubung via MQTT maupun REST API.
                 </p>
               </div>
 
@@ -276,7 +484,7 @@
                 <h4 class="h4 service-item-title">Industrial Automation</h4>
 
                 <p class="service-item-text">
-                  Integrasi PLC, SCADA, HMI, dan sensor industri untuk otomasi proses produksi serta akuisisi data lini pabrik.
+                  Integrasi PLC, SCADA, HMI, dan perangkat lapangan untuk pencatatan data produksi, efisiensi mesin, serta validasi sistem ERP/WMS.
                 </p>
               </div>
 
@@ -289,10 +497,10 @@
               </div>
 
               <div class="service-content-box">
-                <h4 class="h4 service-item-title">Server & System Maintenance</h4>
+                <h4 class="h4 service-item-title">Edge Server & Maintenance</h4>
 
                 <p class="service-item-text">
-                  Administrasi sistem berbasis Linux (Debian), pemeliharaan perangkat endpoint IoT, dan pengelolaan database operasional.
+                  Pengelolaan server lokal berbasis Linux (Debian), Node-RED, broker MQTT, serta pemeliharaan berkala perangkat IoT di lapangan.
                 </p>
               </div>
 
@@ -304,7 +512,7 @@
 
 
         <!--
-- testimonials (Ringkasan Pencapaian & Sorotan Kompetensi)
+- testimonials (Sorotan Kompetensi Teknis)
         -->
 
         <section class="testimonials">
@@ -316,8 +524,8 @@
             <li class="testimonials-item">
               <div class="content-card" data-testimonials-item>
 
-                <figure class="testimonials-avatar-box" style="padding: 14px; display: flex; align-items: center; justify-content: center;">
-                  <img src="./assets/images/icon-dev.svg" alt="Embedded & Hardware IoT" width="45" data-testimonials-avatar>
+                <figure class="testimonials-avatar-box">
+                  <img src="./assets/images/icon-dev.svg" alt="Embedded & Hardware IoT" data-testimonials-avatar>
                 </figure>
 
                 <h4 class="h4 testimonials-item-title" data-testimonials-title>Embedded & Hardware IoT</h4>
@@ -325,7 +533,7 @@
                 <div class="testimonials-text" data-testimonials-text>
                   <p>
                     Berpengalaman merancang dan memprogram perangkat endpoint berbasis Espressif (ESP32), Arduino, dan 
-                    Raspberry Pi untuk pembacaan sensor suhu, kelembaban, infrared, ultrasonik, serta kontrol relay, motor DC, servo, dan LED.
+                    Raspberry Pi untuk pembacaan sensor suhu, kelembaban, infrared, ultrasonik, load cell, serta kontrol relay, motor DC, servo, dan LED.
                   </p>
                 </div>
 
@@ -335,8 +543,8 @@
             <li class="testimonials-item">
               <div class="content-card" data-testimonials-item>
 
-                <figure class="testimonials-avatar-box" style="padding: 14px; display: flex; align-items: center; justify-content: center;">
-                  <img src="./assets/images/icon-app.svg" alt="MQTT & REST API Pipeline" width="45" data-testimonials-avatar>
+                <figure class="testimonials-avatar-box">
+                  <img src="./assets/images/icon-app.svg" alt="MQTT & REST API Pipeline" data-testimonials-avatar>
                 </figure>
 
                 <h4 class="h4 testimonials-item-title" data-testimonials-title>MQTT & REST API Pipeline</h4>
@@ -344,7 +552,7 @@
                 <div class="testimonials-text" data-testimonials-text>
                   <p>
                     Membangun jalur pengiriman data (data forwarding) dari perangkat lapangan ke server maupun database 
-                    secara stabil menggunakan protokol MQTT dan REST API untuk pemantauan jarak jauh.
+                    secara stabil menggunakan protokol MQTT dan REST API untuk pemantauan jarak jauh maupun lokal.
                   </p>
                 </div>
 
@@ -354,8 +562,8 @@
             <li class="testimonials-item">
               <div class="content-card" data-testimonials-item>
 
-                <figure class="testimonials-avatar-box" style="padding: 14px; display: flex; align-items: center; justify-content: center;">
-                  <img src="./assets/images/icon-design.svg" alt="PLC, SCADA & HMI" width="45" data-testimonials-avatar>
+                <figure class="testimonials-avatar-box">
+                  <img src="./assets/images/icon-design.svg" alt="PLC, SCADA & HMI" data-testimonials-avatar>
                 </figure>
 
                 <h4 class="h4 testimonials-item-title" data-testimonials-title>PLC, SCADA & HMI</h4>
@@ -363,7 +571,7 @@
                 <div class="testimonials-text" data-testimonials-text>
                   <p>
                     Tersertifikasi dan terlatih dalam penerapan mikrokontroler, PLC, SCADA, dan HMI untuk mendukung 
-                    sistem otomasi industri di lingkungan manufaktur.
+                    sistem otomasi industri serta pengambilan data mesin di lingkungan manufaktur.
                   </p>
                 </div>
 
@@ -390,8 +598,8 @@
             </button>
 
             <div class="modal-img-wrapper">
-              <figure class="modal-avatar-box" style="padding: 16px; display: flex; align-items: center; justify-content: center;">
-                <img src="./assets/images/icon-dev.svg" alt="Kompetensi" width="50" data-modal-img>
+              <figure class="modal-avatar-box">
+                <img src="./assets/images/icon-dev.svg" alt="Kompetensi" data-modal-img>
               </figure>
 
               <img src="./assets/images/icon-quote.svg" alt="quote icon">
@@ -724,133 +932,168 @@
 
             <!-- Project 1 -->
             <li class="project-item active" data-filter-item data-category="industrial automation">
-              <a href="#">
+              <a href="javascript:void(0)">
 
                 <figure class="project-img">
                   <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
+                    <ion-icon name="hardware-chip-outline"></ion-icon>
                   </div>
 
                   <img src="./assets/images/DHT.jpeg" alt="DHT IoT Warehouse Material dan Factory" loading="lazy">
                 </figure>
 
                 <h3 class="project-title">DHT IoT untuk Warehouse Material & Factory</h3>
-
                 <p class="project-category">Industrial Automation</p>
+                <p class="project-desc">Pemantauan suhu dan kelembaban area gudang material serta lini produksi secara terpusat.</p>
+                <div class="tech-tags">
+                  <span class="tech-tag">ESP32</span>
+                  <span class="tech-tag">Sensor DHT</span>
+                  <span class="tech-tag">MQTT</span>
+                </div>
 
               </a>
             </li>
 
             <!-- Project 2 -->
             <li class="project-item active" data-filter-item data-category="iot monitoring">
-              <a href="#">
+              <a href="javascript:void(0)">
 
                 <figure class="project-img">
                   <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
+                    <ion-icon name="analytics-outline"></ion-icon>
                   </div>
 
                   <img src="./assets/images/dht_rumah.png" alt="DHT IoT dan Website Monitoring Rumah" loading="lazy">
                 </figure>
 
                 <h3 class="project-title">DHT IoT & Website Monitoring Pribadi (Rumah)</h3>
-
                 <p class="project-category">IoT Monitoring</p>
+                <p class="project-desc">Dashboard web real-time untuk mencatat grafik suhu, kelembaban ruangan, dan status perangkat di rumah.</p>
+                <div class="tech-tags">
+                  <span class="tech-tag">ESP32</span>
+                  <span class="tech-tag">Web Dashboard</span>
+                  <span class="tech-tag">REST API</span>
+                </div>
 
               </a>
             </li>
 
             <!-- Project 3 (Foto 1) -->
             <li class="project-item active" data-filter-item data-category="smart agriculture">
-              <a href="#">
+              <a href="javascript:void(0)">
 
                 <figure class="project-img">
                   <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
+                    <ion-icon name="leaf-outline"></ion-icon>
                   </div>
 
                   <img src="./assets/images/Kopeng.PNG" alt="DHT IoT dan Website Monitoring Kebun Strawberry" loading="lazy">
                 </figure>
 
                 <h3 class="project-title">DHT IoT & Website Monitoring Kebun Strawberry (Kopeng)</h3>
-
                 <p class="project-category">Smart Agriculture</p>
+                <p class="project-desc">Antarmuka pemantauan iklim mikro greenhouse kebun stroberi berbasis cloud.</p>
+                <div class="tech-tags">
+                  <span class="tech-tag">Smart Farming</span>
+                  <span class="tech-tag">Cloud Telemetry</span>
+                  <span class="tech-tag">DHT Sensor</span>
+                </div>
 
               </a>
             </li>
 
             <!-- Project 3 (Foto 2 - Dokumentasi Lapangan) -->
             <li class="project-item active" data-filter-item data-category="smart agriculture">
-              <a href="#">
+              <a href="javascript:void(0)">
 
                 <figure class="project-img">
                   <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
+                    <ion-icon name="construct-outline"></ion-icon>
                   </div>
 
                   <img src="./assets/images/kopen2.jpeg" alt="Implementasi Perangkat IoT Kebun Strawberry Kopeng" loading="lazy">
                 </figure>
 
                 <h3 class="project-title">Implementasi Perangkat IoT Kebun Strawberry (Kopeng)</h3>
-
                 <p class="project-category">Smart Agriculture</p>
+                <p class="project-desc">Instalasi node mikrokontroler tahan cuaca untuk pengiriman data suhu & kelembaban lahan.</p>
+                <div class="tech-tags">
+                  <span class="tech-tag">Field Deployment</span>
+                  <span class="tech-tag">ESP32</span>
+                  <span class="tech-tag">IoT Node</span>
+                </div>
 
               </a>
             </li>
 
             <!-- Project 4 -->
             <li class="project-item active" data-filter-item data-category="industrial automation">
-              <a href="#">
+              <a href="javascript:void(0)">
 
                 <figure class="project-img">
                   <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
+                    <ion-icon name="barcode-outline"></ion-icon>
                   </div>
 
                   <img src="./assets/images/Timbangan.jpeg" alt="Project Timbangan dengan Sistem Scanning" loading="lazy">
                 </figure>
 
                 <h3 class="project-title">Sistem Timbangan Cerdas dengan Barcode Scanning</h3>
-
                 <p class="project-category">Industrial Automation</p>
+                <p class="project-desc">Integrasi sensor load cell, barcode scanner, dan validasi database otomatis untuk proses penimbangan.</p>
+                <div class="tech-tags">
+                  <span class="tech-tag">Raspberry Pi</span>
+                  <span class="tech-tag">ESP32</span>
+                  <span class="tech-tag">Barcode Scanner</span>
+                </div>
 
               </a>
             </li>
 
             <!-- Project 5 -->
             <li class="project-item active" data-filter-item data-category="smart agriculture">
-              <a href="#">
+              <a href="javascript:void(0)">
 
                 <figure class="project-img">
                   <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
+                    <ion-icon name="water-outline"></ion-icon>
                   </div>
 
                   <img src="./assets/images/Penyiraman_Otomatis.jpeg" alt="Mini Project Penyiraman Otomatis" loading="lazy">
                 </figure>
 
                 <h3 class="project-title">Mini Project Penyiraman Otomatis</h3>
-
                 <p class="project-category">Smart Agriculture</p>
+                <p class="project-desc">Sistem irigasi otomatis berbasis sensor kelembaban tanah dan kontrol aktuator pompa/relay.</p>
+                <div class="tech-tags">
+                  <span class="tech-tag">Arduino / ESP</span>
+                  <span class="tech-tag">Soil Sensor</span>
+                  <span class="tech-tag">Relay Control</span>
+                </div>
 
               </a>
             </li>
 
             <!-- Project 6 -->
             <li class="project-item active" data-filter-item data-category="industrial automation">
-              <a href="#">
+              <a href="javascript:void(0)">
 
                 <figure class="project-img">
                   <div class="project-item-icon-box">
-                    <ion-icon name="eye-outline"></ion-icon>
+                    <ion-icon name="speedometer-outline"></ion-icon>
                   </div>
 
                   <img src="./assets/images/Dry_Conveyor.jpeg" alt="Monitoring Perhitungan Data dan Efisiensi Mesin Dry Conveyor" loading="lazy">
                 </figure>
 
                 <h3 class="project-title">Monitoring Data & Efisiensi Mesin Dry Conveyor</h3>
-
                 <p class="project-category">Industrial Automation</p>
+                <p class="project-desc">Akuisisi data operasional mesin conveyor untuk perhitungan output produksi dan analisis efisiensi.</p>
+                <div class="tech-tags">
+                  <span class="tech-tag">PLC / HMI</span>
+                  <span class="tech-tag">Sensor Industri</span>
+                  <span class="tech-tag">Data Analytics</span>
+                </div>
 
               </a>
             </li>
@@ -900,24 +1143,75 @@
 
         <section class="contact-form">
 
-          <h3 class="h3 form-title">Kirim Pesan</h3>
+          <h3 class="h3 form-title">Hubungi Saya Langsung</h3>
 
-          <form action="mailto:rezaarista777@gmail.com" method="post" enctype="text/plain" class="form" data-form>
+          <div class="availability-banner">
+            <span class="status-dot"></span>
+            <span>Terbuka untuk diskusi proyek <strong>Industrial IoT, Sistem Monitoring Web, & Otomasi</strong>. Pilih kanal di bawah untuk terhubung langsung:</span>
+          </div>
+
+          <div class="quick-contact-grid">
+
+            <a href="https://wa.me/6285179967500?text=Halo%20Reza%2C%20saya%20melihat%20portofolio%20IoT%20Anda%20dan%20ingin%20berdiskusi." target="_blank" class="quick-contact-card">
+              <div class="quick-contact-icon">
+                <ion-icon name="logo-whatsapp"></ion-icon>
+              </div>
+              <div class="quick-contact-info">
+                <h4>WhatsApp (Respon Cepat)</h4>
+                <p>+62 851 7996 7500</p>
+              </div>
+            </a>
+
+            <a href="mailto:rezaarista777@gmail.com?subject=Diskusi%20Proyek%20/%20Kolaborasi%20IoT" class="quick-contact-card">
+              <div class="quick-contact-icon">
+                <ion-icon name="mail-outline"></ion-icon>
+              </div>
+              <div class="quick-contact-info">
+                <h4>Email Resmi</h4>
+                <p>rezaarista777@gmail.com</p>
+              </div>
+            </a>
+
+            <a href="https://www.linkedin.com/in/reza-arista-pratama-9889201a5" target="_blank" class="quick-contact-card">
+              <div class="quick-contact-icon">
+                <ion-icon name="logo-linkedin"></ion-icon>
+              </div>
+              <div class="quick-contact-info">
+                <h4>LinkedIn Profesional</h4>
+                <p>Reza Arista Pratama</p>
+              </div>
+            </a>
+
+            <a href="https://rezaarista.my.canva.site" target="_blank" class="quick-contact-card">
+              <div class="quick-contact-icon">
+                <ion-icon name="globe-outline"></ion-icon>
+              </div>
+              <div class="quick-contact-info">
+                <h4>Portofolio Visual</h4>
+                <p>rezaarista.my.canva.site</p>
+              </div>
+            </a>
+
+          </div>
+
+          <!-- FORM KIRIM PESAN DINONAKTIFKAN SEMENTARA
+          <form action="#" class="form" data-form>
 
             <div class="input-wrapper">
-              <input type="text" name="fullname" class="form-input" placeholder="Nama Lengkap" required data-form-input>
+              <input type="text" name="fullname" class="form-input" placeholder="Full name" required data-form-input>
 
-              <input type="email" name="email" class="form-input" placeholder="Alamat Email" required data-form-input>
+              <input type="email" name="email" class="form-input" placeholder="Email address" required data-form-input>
             </div>
 
-            <textarea name="message" class="form-input" placeholder="Tulis pesan Anda di sini..." required data-form-input></textarea>
+            <textarea name="message" class="form-input" placeholder="Your Message" required data-form-input></textarea>
 
             <button class="form-btn" type="submit" disabled data-form-btn>
               <ion-icon name="paper-plane"></ion-icon>
-              <span>Kirim Pesan</span>
+              <span>Send Message</span>
             </button>
 
           </form>
+          -->
 
         </section>
 
